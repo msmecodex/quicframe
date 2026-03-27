@@ -2,6 +2,12 @@
 
 QuicFrame provides a simple method-and-path router with support for static paths, named params, wildcards, and groups.
 
+Examples in this guide assume:
+
+```go
+import qf "github.com/msmecodex/quicframe"
+```
+
 ## Registering Routes
 
 ```go

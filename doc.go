@@ -2,7 +2,7 @@
 //
 // QuicFrame is designed to be used as a normal Go module dependency:
 //
-//	go get github.com/twaritam/quicframe@latest
+//	go get github.com/msmecodex/quicframe@latest
 //
 // It exposes an Express-style API for registering routes, attaching
 // middleware, and returning MsgPack responses over QUIC streams.
@@ -20,9 +20,9 @@
 //		"context"
 //		"log"
 //
-//		qf "github.com/twaritam/quicframe"
-//		"github.com/twaritam/quicframe/middleware"
-//		"github.com/twaritam/quicframe/tlsutil"
+//		qf "github.com/msmecodex/quicframe"
+//		"github.com/msmecodex/quicframe/middleware"
+//		"github.com/msmecodex/quicframe/tlsutil"
 //	)
 //
 //	func main() {
@@ -51,9 +51,9 @@
 //
 // # Packages
 //
-//   - [github.com/twaritam/quicframe/protocol] defines wire frames and codec helpers
-//   - [github.com/twaritam/quicframe/middleware] provides logger, recovery, JWT, and rate limiting middleware
-//   - [github.com/twaritam/quicframe/tlsutil] provides TLS helpers for development and production
+//   - [github.com/msmecodex/quicframe/protocol] defines wire frames and codec helpers
+//   - [github.com/msmecodex/quicframe/middleware] provides logger, recovery, JWT, and rate limiting middleware
+//   - [github.com/msmecodex/quicframe/tlsutil] provides TLS helpers for development and production
 //
 // Additional guides live in the repository's docs directory.
 package quicframe

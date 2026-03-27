@@ -8,6 +8,15 @@ type MiddlewareFunc func(next HandlerFunc) HandlerFunc
 
 Middleware is a good place for logging, auth, rate limiting, metrics, and request-scoped values.
 
+Examples in this guide assume:
+
+```go
+import (
+    qf "github.com/msmecodex/quicframe"
+    "github.com/msmecodex/quicframe/middleware"
+)
+```
+
 ## Applying Middleware
 
 Global middleware:

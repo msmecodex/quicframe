@@ -6,6 +6,7 @@ Crate metadata:
 
 - package name: `quicframe-client`
 - library import path: `quicframe`
+- repository: `https://github.com/msmecodex/quicframe/`
 
 ## Features
 
@@ -19,6 +20,19 @@ Crate metadata:
 ## Add to a Rust Project
 
 If you publish the crate separately, consumers can add it from crates.io. In the repository form, the source lives under `sdk/rust`.
+
+For local development from this repository:
+
+```bash
+git clone https://github.com/msmecodex/quicframe/
+```
+
+Then reference the crate by path:
+
+```toml
+[dependencies]
+quicframe-client = { path = "../quicframe/sdk/rust" }
+```
 
 Core dependencies used by the SDK:
 

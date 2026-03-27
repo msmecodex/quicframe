@@ -4,6 +4,12 @@ QUIC requires TLS 1.3, so every QuicFrame server needs a valid `*tls.Config`.
 
 The `tlsutil` package provides three setup paths.
 
+Examples in this guide assume:
+
+```go
+import "github.com/msmecodex/quicframe/tlsutil"
+```
+
 ## Self-Signed Certificates
 
 Best for local development and demos:

@@ -2,6 +2,12 @@
 
 QuicFrame keeps the core API small, but there are still a few important knobs available in the framework and companion packages.
 
+If you are consuming the framework from another Go project, install it using the current module path:
+
+```bash
+go get github.com/msmecodex/quicframe@latest
+```
+
 ## App Configuration
 
 ## Logger

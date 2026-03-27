@@ -2,6 +2,10 @@
 
 QuicFrame is split into a small core and a few focused supporting packages so it can be imported cleanly as a dependency in another Go application.
 
+Repository:
+
+- `https://github.com/msmecodex/quicframe/`
+
 ## High-Level Flow
 
 1. A client opens a QUIC bidirectional stream.

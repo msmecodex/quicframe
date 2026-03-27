@@ -18,9 +18,9 @@ import (
 
 	"github.com/vmihailenco/msgpack/v5"
 
-	qf "github.com/twaritam/quicframe"
-	"github.com/twaritam/quicframe/middleware"
-	"github.com/twaritam/quicframe/tlsutil"
+	qf "github.com/msmecodex/quicframe"
+	"github.com/msmecodex/quicframe/middleware"
+	"github.com/msmecodex/quicframe/tlsutil"
 )
 
 func main() {

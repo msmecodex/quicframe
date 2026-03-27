@@ -7,7 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/twaritam/quicframe/protocol"
+	"github.com/msmecodex/quicframe/protocol"
 	"github.com/vmihailenco/msgpack/v5"
 )
 

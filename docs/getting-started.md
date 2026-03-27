@@ -2,6 +2,10 @@
 
 QuicFrame is a Go module that you can add to any application with `go get`, then use to build QUIC-native APIs, browser-facing WebTransport endpoints, and streaming services with a single handler model.
 
+Repository:
+
+- `https://github.com/msmecodex/quicframe/`
+
 ## Requirements
 
 | Tool | Version |
@@ -12,17 +16,24 @@ QuicFrame is a Go module that you can add to any application with `go get`, then
 
 ## Install
 
+Current Go module path:
+
 ```bash
-go get github.com/twaritam/quicframe@latest
+go get github.com/msmecodex/quicframe@latest
 ```
+
+Note:
+
+- the source repository is `https://github.com/msmecodex/quicframe/`
+- the Go module path is `github.com/msmecodex/quicframe`
 
 Typical imports:
 
 ```go
 import (
-    qf "github.com/twaritam/quicframe"
-    "github.com/twaritam/quicframe/middleware"
-    "github.com/twaritam/quicframe/tlsutil"
+    qf "github.com/msmecodex/quicframe"
+    "github.com/msmecodex/quicframe/middleware"
+    "github.com/msmecodex/quicframe/tlsutil"
 )
 ```
 
@@ -35,9 +46,9 @@ import (
     "context"
     "log"
 
-    qf "github.com/twaritam/quicframe"
-    "github.com/twaritam/quicframe/middleware"
-    "github.com/twaritam/quicframe/tlsutil"
+    qf "github.com/msmecodex/quicframe"
+    "github.com/msmecodex/quicframe/middleware"
+    "github.com/msmecodex/quicframe/tlsutil"
 )
 
 func main() {
@@ -105,6 +116,9 @@ Your app owns business logic and data access. QuicFrame handles transport, routi
 ## Examples in This Repository
 
 ```bash
+git clone https://github.com/msmecodex/quicframe/
+cd quicframe
+
 go run ./examples/basic-server
 go run ./examples/streaming-demo
 go run ./cmd/example

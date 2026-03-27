@@ -6,6 +6,7 @@ Package metadata:
 
 - package name: `@quicframe/client`
 - module type: ESM
+- repository: `https://github.com/msmecodex/quicframe/`
 
 ## Features
 
@@ -17,17 +18,22 @@ Package metadata:
 
 ## Install
 
-Inside the SDK package, dependencies are:
+If the package is published to npm:
 
 ```bash
+npm install @quicframe/client
+```
+
+If you are working from this repository directly:
+
+```bash
+git clone https://github.com/msmecodex/quicframe/
+cd quicframe/sdk/js
 npm install
+npm run build
 ```
 
-The runtime dependency is:
-
-```bash
-npm install @msgpack/msgpack
-```
+The built package is emitted to `dist/`.
 
 ## Create a Client
 
@@ -43,6 +49,8 @@ const client = new QuicFrameClient("https://localhost:4434/wt", {
 
 await client.connect();
 ```
+
+When consuming from npm, the package resolves from `dist/` automatically through `package.json` exports.
 
 ## Unary Requests
 

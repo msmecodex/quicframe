@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	qf "github.com/twaritam/quicframe"
-	"github.com/twaritam/quicframe/protocol"
+	qf "github.com/msmecodex/quicframe"
+	"github.com/msmecodex/quicframe/protocol"
 )
 
 const jwtLocalsKey = "jwt_claims"

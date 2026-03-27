@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"runtime/debug"
 
-	qf "github.com/twaritam/quicframe"
-	"github.com/twaritam/quicframe/protocol"
+	qf "github.com/msmecodex/quicframe"
+	"github.com/msmecodex/quicframe/protocol"
 )
 
 // Recovery returns middleware that catches panics in downstream handlers,

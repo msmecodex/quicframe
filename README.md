@@ -322,6 +322,7 @@ cargo run --bin qf-example -- --addr 127.0.0.1:4433
 ```bash
 cd sdk/js
 npm install
+npm run build
 ```
 
 ```js

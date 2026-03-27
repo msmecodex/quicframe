@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	qf "github.com/twaritam/quicframe"
-	"github.com/twaritam/quicframe/protocol"
+	qf "github.com/msmecodex/quicframe"
+	"github.com/msmecodex/quicframe/protocol"
 	"golang.org/x/time/rate"
 )
 

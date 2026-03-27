@@ -1,4 +1,4 @@
-module github.com/twaritam/quicframe
+module github.com/msmecodex/quicframe
 
 go 1.24.0
 

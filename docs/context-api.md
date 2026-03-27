@@ -2,6 +2,12 @@
 
 `Context` represents one request/response exchange. Handlers and middleware use it to inspect the request, read route params, store locals, and send replies.
 
+Examples in this guide assume you imported the framework as:
+
+```go
+import qf "github.com/msmecodex/quicframe"
+```
+
 ## Request Access
 
 ### Method and Path

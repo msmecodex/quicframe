@@ -2,6 +2,15 @@
 
 QuicFrame supports server-to-client streaming over the same QUIC stream that carried the request.
 
+Examples in this guide assume:
+
+```go
+import (
+    qf "github.com/msmecodex/quicframe"
+    "github.com/vmihailenco/msgpack/v5"
+)
+```
+
 ## When to Use It
 
 Streaming works well for:
