@@ -130,7 +130,7 @@ StreamChunk { id, seq uint64, data bytes, final bool }
 ### Run the example server
 
 ```bash
-git clone https://github.com/twaritam/quicframe
+git clone https://github.com/msmecodex/quicframe/
 cd twaritam
 
 go run ./cmd/example

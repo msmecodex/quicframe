@@ -3,22 +3,37 @@
   "version": "0.1.0",
   "description": "Browser WebTransport client for the QuicFrame QUIC-native API framework",
   "type": "module",
-  "main": "./src/client.js",
+  "main": "./dist/client.js",
+  "types": "./dist/client.d.ts",
   "exports": {
-    ".": "./src/client.js",
-    "./protocol": "./src/protocol.js"
+    ".": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol.d.ts",
+      "import": "./dist/protocol.js"
+    }
   },
-  "files": ["src/"],
+  "files": [
+    "dist/"
+  ],
   "scripts": {
-    "build": "tsc --noEmit",
-    "test":  "node --experimental-vm-modules node_modules/.bin/jest"
+    "build": "tsc -p tsconfig.json",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
   },
   "dependencies": {
     "@msgpack/msgpack": "^3.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.2"
   },
-  "keywords": ["quic", "webtransport", "msgpack", "rpc", "binary"],
+  "keywords": [
+    "quic",
+    "webtransport",
+    "msgpack",
+    "rpc",
+    "binary"
+  ],
   "license": "MIT"
 }

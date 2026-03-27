@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Production-grade Rust client SDK for the QuicFrame QUIC-native API framework"
 license = "MIT"
-repository = "https://github.com/twaritam/quicframe"
+repository = "https://github.com/msmecodex/quicframe/"
 
 [lib]
 name = "quicframe"
