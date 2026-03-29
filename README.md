@@ -331,6 +331,14 @@ import { QuicFrameClient } from '@quicframe/client';
 const client = new QuicFrameClient('https://api.example.com:4434/wt', {
     defaultHeaders: { authorization: 'Bearer <token>' },
     fallbackBase:   'https://api.example.com',   // fetch fallback
+    webTransportOptions: {
+        serverCertificateHashes: [
+            {
+                algorithm: 'sha-256',
+                value: new Uint8Array([/* local cert hash bytes */]),
+            },
+        ],
+    },
 });
 await client.connect();
 
@@ -355,6 +363,17 @@ await client.close();
 ```
 
 The client automatically falls back to `fetch` (HTTP with `application/x-msgpack`) if `WebTransport` is unavailable in the browser.
+
+For a runnable browser demo, see `examples/react-basic`:
+
+```bash
+go run ./examples/basic-server
+cd examples/react-basic
+npm install
+npm run dev
+```
+
+The basic server prints a `webtransport_cert_sha256` value on startup. Paste that into `examples/react-basic/src/App.jsx` when using the local self-signed certificate.
 
 ---
 

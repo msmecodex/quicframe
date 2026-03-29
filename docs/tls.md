@@ -26,8 +26,25 @@ Behavior:
 - generates an in-memory ECDSA P-256 certificate
 - supports DNS names and IP SANs from the `hosts` arguments
 - sets `MinVersion` to TLS 1.3
+- uses a short validity window suitable for browser WebTransport certificate pinning
 
 Use this for local work only. Native and browser clients may need explicit trust bypass or local certificate trust setup.
+
+If you want a stable local certificate across restarts, persist it:
+
+```go
+tlsCfg, err := tlsutil.LoadOrCreateSelfSigned(
+    ".local/certs/basic-server/localhost-cert.pem",
+    ".local/certs/basic-server/localhost-key.pem",
+    "localhost",
+    "127.0.0.1",
+)
+if err != nil {
+    return err
+}
+```
+
+That keeps the same certificate on disk unless it is no longer suitable for local WebTransport development.
 
 ## Loading PEM Files
 
@@ -92,3 +109,5 @@ JS SDK:
 
 - WebTransport requires a secure context
 - fallback `fetch` mode also benefits from a valid HTTPS certificate
+- local self-signed WebTransport flows can use `serverCertificateHashes`
+- hash-pinned dev certificates need to be short-lived for Chrome compatibility

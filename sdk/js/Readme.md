@@ -44,7 +44,14 @@ const client = new QuicFrameClient("https://localhost:4434/wt", {
   defaultHeaders: {
     authorization: "Bearer token",
   },
-  fallbackBase: "https://localhost:4434",
+  webTransportOptions: {
+    serverCertificateHashes: [
+      {
+        algorithm: "sha-256",
+        value: new Uint8Array([/* local cert hash bytes */]),
+      },
+    ],
+  },
 });
 
 await client.connect();
@@ -52,7 +59,7 @@ await client.connect();
 
 ## React Example App
 
-A minimal React example is included at `sdk/js/examples/react-basic`.
+A minimal React example is included at `examples/react-basic`.
 
 It demonstrates:
 
@@ -65,7 +72,7 @@ Run it like this:
 
 ```bash
 go run ./examples/basic-server
-cd sdk/js/examples/react-basic
+cd examples/react-basic
 npm install
 npm run dev
 ```
@@ -74,9 +81,10 @@ Then open the Vite URL in your browser.
 
 Notes:
 
-- the example imports `QuicFrameClient` from the local `sdk/js/src/client.js` file
-- Vite aliases `@msgpack/msgpack` to the example app's own install so the SDK source can run without a separate package build step
-- the QuicFrame basic server uses a self-signed certificate, so your browser may require you to trust local `https://localhost:4434` first
+- the example consumes the local SDK package with `file:../../sdk/js`
+- the basic server persists its local certificate under `.local/certs/basic-server`
+- on startup, the basic server logs `webtransport_cert_sha256`; copy that value into `serverCertificateHashHex` in `examples/react-basic/src/App.jsx`
+- the local development certificate is intentionally short-lived so Chrome can accept it with `serverCertificateHashes`
 - this example is focused on the WebTransport path, because the basic server is not exposing separate HTTP fallback endpoints
 
 When consuming from npm, the package resolves from `dist/` automatically through `package.json` exports.
@@ -142,7 +150,8 @@ Ping also requires WebTransport.
 
 - HTTPS is required for WebTransport in normal browser use.
 - Certificates must be accepted by the browser.
-- If you use self-signed certs locally, you may need to trust them manually.
+- For local self-signed development with WebTransport, use `serverCertificateHashes`.
+- Chrome requires hash-pinned development certificates to be short-lived.
 
 ## Protocol Helpers
 

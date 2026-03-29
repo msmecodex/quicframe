@@ -74,7 +74,12 @@ func main() {
         return c.MsgPack(201, body)
     })
 
-    tlsCfg, err := tlsutil.SelfSigned("localhost", "127.0.0.1")
+    tlsCfg, err := tlsutil.LoadOrCreateSelfSigned(
+        ".local/certs/myapp/localhost-cert.pem",
+        ".local/certs/myapp/localhost-key.pem",
+        "localhost",
+        "127.0.0.1",
+    )
     if err != nil {
         log.Fatal(err)
     }
@@ -123,6 +128,17 @@ go run ./examples/basic-server
 go run ./examples/streaming-demo
 go run ./cmd/example
 ```
+
+React browser example:
+
+```bash
+go run ./examples/basic-server
+cd examples/react-basic
+npm install
+npm run dev
+```
+
+When the basic server starts, it logs `webtransport_cert_sha256`. Paste that hash into `examples/react-basic/src/App.jsx` for local WebTransport with the generated self-signed certificate.
 
 ## Related Guides
 
