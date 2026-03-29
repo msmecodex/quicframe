@@ -122,11 +122,13 @@ export class QuicFrameClient {
    * @param {object} [opts]
    * @param {Record<string,string>} [opts.defaultHeaders]  merged into every request
    * @param {string} [opts.fallbackBase]  HTTP base URL for the fetch fallback
+   * @param {WebTransportOptions} [opts.webTransportOptions] extra WebTransport constructor options
    */
   constructor(url, opts = {}) {
     this._url            = url;
     this._defaultHeaders = opts.defaultHeaders ?? {};
     this._fallbackBase   = opts.fallbackBase  ?? null;
+    this._wtOptions      = opts.webTransportOptions ?? {};
     this._transport      = null;   // WebTransport instance
     this._useFallback    = false;
   }
@@ -142,7 +144,7 @@ export class QuicFrameClient {
     }
 
     try {
-      this._transport = new WebTransport(this._url);
+      this._transport = new WebTransport(this._url, this._wtOptions);
       await this._transport.ready;
       console.info('[quicframe] WebTransport connected');
     } catch (err) {

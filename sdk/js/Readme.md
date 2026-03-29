@@ -50,6 +50,35 @@ const client = new QuicFrameClient("https://localhost:4434/wt", {
 await client.connect();
 ```
 
+## React Example App
+
+A minimal React example is included at `sdk/js/examples/react-basic`.
+
+It demonstrates:
+
+- connecting to `https://localhost:4434/wt`
+- calling `GET /ping`
+- calling `GET /users`
+- creating a user with `POST /users`
+
+Run it like this:
+
+```bash
+go run ./examples/basic-server
+cd sdk/js/examples/react-basic
+npm install
+npm run dev
+```
+
+Then open the Vite URL in your browser.
+
+Notes:
+
+- the example imports `QuicFrameClient` from the local `sdk/js/src/client.js` file
+- Vite aliases `@msgpack/msgpack` to the example app's own install so the SDK source can run without a separate package build step
+- the QuicFrame basic server uses a self-signed certificate, so your browser may require you to trust local `https://localhost:4434` first
+- this example is focused on the WebTransport path, because the basic server is not exposing separate HTTP fallback endpoints
+
 When consuming from npm, the package resolves from `dist/` automatically through `package.json` exports.
 
 ## Unary Requests

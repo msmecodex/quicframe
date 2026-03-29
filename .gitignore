@@ -1,2 +1,5 @@
 sdk/js/node_modules
 sdk/js/dist
+
+examples/react-basic/node_modules
+.local/

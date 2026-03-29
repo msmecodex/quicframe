@@ -156,15 +156,19 @@ func (a *App) ListenNative(ctx context.Context, addr string, tlsCfg *tls.Config)
 // Browser clients connect to the /wt endpoint via the WebTransport API.
 // Blocks until the server encounters a fatal error.
 func (a *App) ListenWebTransport(addr string, tlsCfg *tls.Config) error {
+	cfg := http3.ConfigureTLSConfig(tlsCfg.Clone())
+
 	h3srv := &http3.Server{
 		Addr:       addr,
-		TLSConfig:  tlsCfg,
+		TLSConfig:  cfg,
 		QUICConfig: a.quicCfg,
 	}
+	webtransport.ConfigureHTTP3Server(h3srv)
 
 	wtSrv := &webtransport.Server{
-		H3:          h3srv,
-		CheckOrigin: func(r *http.Request) bool { return true }, // tighten in production
+		H3:                   h3srv,
+		ApplicationProtocols: []string{"quicframe"},
+		CheckOrigin:          func(r *http.Request) bool { return true }, // tighten in production
 	}
 
 	mux := http.NewServeMux()
