@@ -1,5 +1,6 @@
 sdk/js/node_modules
 sdk/js/dist
+sdk/rust/target
 
 examples/react-basic/node_modules
 .local/

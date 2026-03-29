@@ -8,6 +8,7 @@ repository = "https://github.com/msmecodex/quicframe/"
 
 [lib]
 name = "quicframe"
+crate-type = ["rlib", "cdylib", "staticlib"]
 
 [[bin]]
 name = "qf-example"
@@ -36,6 +37,9 @@ uuid    = { version = "1", features = ["v4"] }
 thiserror = "1"
 tracing   = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde_bytes = "0.11"
+webpki-roots = "0.26"
+serde_json = "1"
 
 [dev-dependencies]
 tokio-test = "0.4"

@@ -34,6 +34,7 @@ Browser           ── WebTransport ───┘      MsgPack · Router · Mid
 - **Streaming** — server-push via `StreamWriter`, with backpressure
 - **TLS** — self-signed (dev) or Let's Encrypt autocert (production)
 - **Rust SDK** — quinn + rmp-serde, connection pool, retry, streaming
+- **Native FFI SDK** — C ABI for Android, iOS, Linux, macOS, Windows
 - **Browser SDK** — WebTransport + `@msgpack/msgpack`, automatic fetch fallback
 
 ---

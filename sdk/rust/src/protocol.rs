@@ -13,7 +13,7 @@
 
 use std::collections::HashMap;
 
-use bytes::{Buf, BufMut, BytesMut};
+use bytes::{BufMut, BytesMut};
 use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
@@ -21,13 +21,13 @@ use crate::error::QfError;
 
 // ── Frame type discriminants ─────────────────────────────────────────────────
 
-pub const FRAME_REQUEST:     u8 = 0x01;
-pub const FRAME_RESPONSE:    u8 = 0x02;
+pub const FRAME_REQUEST: u8 = 0x01;
+pub const FRAME_RESPONSE: u8 = 0x02;
 pub const FRAME_STREAM_DATA: u8 = 0x03;
-pub const FRAME_STREAM_END:  u8 = 0x04;
-pub const FRAME_ERROR:       u8 = 0x05;
-pub const FRAME_PING:        u8 = 0x06;
-pub const FRAME_PONG:        u8 = 0x07;
+pub const FRAME_STREAM_END: u8 = 0x04;
+pub const FRAME_ERROR: u8 = 0x05;
+pub const FRAME_PING: u8 = 0x06;
+pub const FRAME_PONG: u8 = 0x07;
 
 /// Maximum single frame size (64 MiB).
 pub const MAX_FRAME_SIZE: u32 = 64 * 1024 * 1024;
@@ -102,14 +102,16 @@ where
     let encoded = rmp_serde::to_vec_named(payload)
         .map_err(|e| QfError::Codec(format!("msgpack encode: {e}")))?;
 
-    let frame_len = (1u32 + encoded.len() as u32);
+    let frame_len = 1u32 + encoded.len() as u32;
     if frame_len > MAX_FRAME_SIZE {
-        return Err(QfError::Codec(format!("payload too large: {frame_len} bytes")));
+        return Err(QfError::Codec(format!(
+            "payload too large: {frame_len} bytes"
+        )));
     }
 
     let mut buf = BytesMut::with_capacity(4 + 1 + encoded.len());
-    buf.put_u32(frame_len);          // big-endian length
-    buf.put_u8(frame_type);          // type discriminant
+    buf.put_u32(frame_len); // big-endian length
+    buf.put_u8(frame_type); // type discriminant
     buf.extend_from_slice(&encoded); // msgpack payload
 
     w.write_all(&buf).await.map_err(QfError::Io)?;
@@ -119,7 +121,7 @@ where
 /// Decoded frame returned by [`read_frame`].
 pub struct RawFrame {
     pub frame_type: u8,
-    pub payload:    Vec<u8>,
+    pub payload: Vec<u8>,
 }
 
 /// Read one length-prefixed frame from an async reader.
@@ -141,24 +143,21 @@ where
 
     Ok(RawFrame {
         frame_type: buf[0],
-        payload:    buf[1..].to_vec(),
+        payload: buf[1..].to_vec(),
     })
 }
 
 /// Decode a [`Response`] from a raw msgpack payload.
 pub fn decode_response(data: &[u8]) -> Result<Response, QfError> {
-    rmp_serde::from_slice(data)
-        .map_err(|e| QfError::Codec(format!("decode response: {e}")))
+    rmp_serde::from_slice(data).map_err(|e| QfError::Codec(format!("decode response: {e}")))
 }
 
 /// Decode a [`StreamChunk`] from a raw msgpack payload.
 pub fn decode_stream_chunk(data: &[u8]) -> Result<StreamChunk, QfError> {
-    rmp_serde::from_slice(data)
-        .map_err(|e| QfError::Codec(format!("decode stream chunk: {e}")))
+    rmp_serde::from_slice(data).map_err(|e| QfError::Codec(format!("decode stream chunk: {e}")))
 }
 
 /// Decode an [`ErrorFrame`] from a raw msgpack payload.
 pub fn decode_error(data: &[u8]) -> Result<ErrorFrame, QfError> {
-    rmp_serde::from_slice(data)
-        .map_err(|e| QfError::Codec(format!("decode error frame: {e}")))
+    rmp_serde::from_slice(data).map_err(|e| QfError::Codec(format!("decode error frame: {e}")))
 }

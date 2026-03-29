@@ -23,8 +23,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut cfg = ClientConfig::default();
     cfg.pool = PoolConfig {
-        max_connections:  4,
-        alpn:             b"qf/1".to_vec(),
+        max_connections: 4,
+        alpn: b"qf/1".to_vec(),
         skip_cert_verify: true, // dev self-signed cert
         ..Default::default()
     };
@@ -54,10 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "authorization".into(),
         "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.DEMO".into(),
     );
-    let user = std::collections::HashMap::from([
-        ("name", "Alice"),
-        ("email", "alice@example.com"),
-    ]);
+    let user = std::collections::HashMap::from([("name", "Alice"), ("email", "alice@example.com")]);
     let resp = client.post("/api/v1/users", &user, headers.clone()).await?;
     info!("POST /api/v1/users → status={}", resp.status);
 

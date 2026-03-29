@@ -7,16 +7,12 @@
 //!
 //! Stale / closed connections are detected lazily and replaced.
 
-use std::{
-    net::SocketAddr,
-    sync::Arc,
-    time::Duration,
-};
+use std::{net::SocketAddr, sync::Arc, time::Duration};
 
 use quinn::{ClientConfig, Connection, Endpoint};
 use rustls::pki_types::ServerName;
 use tokio::sync::Mutex;
-use tracing::{debug, warn};
+use tracing::debug;
 
 use crate::error::QfError;
 
@@ -113,9 +109,9 @@ pub struct PoolConfig {
 impl Default for PoolConfig {
     fn default() -> Self {
         Self {
-            max_connections:  4,
-            alpn:             b"qf/1".to_vec(),
-            idle_timeout:     Duration::from_secs(300),
+            max_connections: 4,
+            alpn: b"qf/1".to_vec(),
+            idle_timeout: Duration::from_secs(300),
             skip_cert_verify: false,
         }
     }
@@ -124,11 +120,11 @@ impl Default for PoolConfig {
 /// A simple connection pool that keeps up to `max_connections` live
 /// [`quinn::Connection`]s to a single server endpoint.
 pub struct Pool {
-    endpoint:    Endpoint,
+    endpoint: Endpoint,
     server_addr: SocketAddr,
     server_name: String,
-    cfg:         PoolConfig,
-    conns:       Mutex<Vec<Connection>>,
+    cfg: PoolConfig,
+    conns: Mutex<Vec<Connection>>,
 }
 
 impl Pool {
@@ -151,7 +147,9 @@ impl Pool {
 
         let mut transport = quinn::TransportConfig::default();
         transport.max_idle_timeout(Some(
-            cfg.idle_timeout.try_into().expect("idle timeout out of range"),
+            cfg.idle_timeout
+                .try_into()
+                .expect("idle timeout out of range"),
         ));
         client_cfg.transport_config(Arc::new(transport));
 

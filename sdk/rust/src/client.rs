@@ -17,12 +17,7 @@
 //! # Ok(()) }
 //! ```
 
-use std::{
-    collections::HashMap,
-    net::SocketAddr,
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use serde::Serialize;
 use tokio::time::timeout;
@@ -32,8 +27,7 @@ use uuid::Uuid;
 use crate::{
     error::QfError,
     protocol::{
-        self, Request, Response, StreamChunk,
-        FRAME_ERROR, FRAME_PING, FRAME_PONG, FRAME_RESPONSE,
+        self, Request, StreamChunk, FRAME_ERROR, FRAME_PING, FRAME_PONG, FRAME_RESPONSE,
         FRAME_STREAM_DATA, FRAME_STREAM_END,
     },
     transport::{Pool, PoolConfig},
@@ -44,27 +38,26 @@ use crate::{
 /// A fully-received, non-streaming response.
 #[derive(Debug)]
 pub struct QfResponse {
-    pub status:  i32,
+    pub status: i32,
     pub headers: HashMap<String, String>,
     /// Raw msgpack-encoded body.  Decode with `rmp_serde::from_slice`.
-    pub body:    Vec<u8>,
+    pub body: Vec<u8>,
 }
 
 impl QfResponse {
     /// Deserialise the body using rmp_serde.
     pub fn decode<T: for<'de> serde::Deserialize<'de>>(&self) -> Result<T, QfError> {
-        rmp_serde::from_slice(&self.body)
-            .map_err(|e| QfError::Codec(format!("decode body: {e}")))
+        rmp_serde::from_slice(&self.body).map_err(|e| QfError::Codec(format!("decode body: {e}")))
     }
 }
 
 /// A handle for consuming a streaming response.
 pub struct StreamHandle {
-    recv: tokio::io::ReadHalf<quinn::RecvStream>,
+    recv: quinn::RecvStream,
 }
 
 impl StreamHandle {
-    fn new(recv: tokio::io::ReadHalf<quinn::RecvStream>) -> Self {
+    fn new(recv: quinn::RecvStream) -> Self {
         Self { recv }
     }
 
@@ -82,7 +75,10 @@ impl StreamHandle {
             FRAME_STREAM_END => Ok(None),
             FRAME_ERROR => {
                 let ef = protocol::decode_error(&frame.payload)?;
-                Err(QfError::ServerError { code: ef.code, message: ef.message })
+                Err(QfError::ServerError {
+                    code: ef.code,
+                    message: ef.message,
+                })
             }
             other => Err(QfError::UnexpectedFrame(other)),
         }
@@ -119,9 +115,9 @@ pub struct ClientConfig {
 impl Default for ClientConfig {
     fn default() -> Self {
         Self {
-            pool:             PoolConfig::default(),
-            request_timeout:  Duration::from_secs(30),
-            max_retries:      3,
+            pool: PoolConfig::default(),
+            request_timeout: Duration::from_secs(30),
+            max_retries: 3,
             retry_base_delay: Duration::from_millis(100),
         }
     }
@@ -134,8 +130,8 @@ impl Default for ClientConfig {
 /// Clone-able: each clone shares the same connection pool.
 #[derive(Clone)]
 pub struct Client {
-    pool:    Arc<Pool>,
-    cfg:     ClientConfig,
+    pool: Arc<Pool>,
+    cfg: ClientConfig,
     /// Default headers merged into every request.
     default_headers: HashMap<String, String>,
 }
@@ -153,10 +149,12 @@ impl Client {
             .to_socket_addrs()
             .map_err(QfError::Io)?
             .next()
-            .ok_or_else(|| QfError::Io(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "no socket address resolved",
-            )))?;
+            .ok_or_else(|| {
+                QfError::Io(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    "no socket address resolved",
+                ))
+            })?;
 
         let pool = Pool::new(addr, server_name, cfg.pool.clone()).await?;
         Ok(Self {
@@ -269,12 +267,12 @@ impl Client {
         let (mut send, mut recv) = conn.open_bi().await?;
 
         let req = Request {
-            id:      Uuid::new_v4().to_string(),
-            method:  method.to_string(),
-            path:    path.to_string(),
+            id: Uuid::new_v4().to_string(),
+            method: method.to_string(),
+            path: path.to_string(),
             headers: headers.clone(),
-            body:    body.to_vec(),
-            stream:  false,
+            body: body.to_vec(),
+            stream: false,
         };
 
         let result = timeout(self.cfg.request_timeout, async {
@@ -286,14 +284,17 @@ impl Client {
                 FRAME_RESPONSE => {
                     let resp = protocol::decode_response(&frame.payload)?;
                     Ok(QfResponse {
-                        status:  resp.status,
+                        status: resp.status,
                         headers: resp.headers,
-                        body:    resp.body,
+                        body: resp.body,
                     })
                 }
                 FRAME_ERROR => {
                     let ef = protocol::decode_error(&frame.payload)?;
-                    Err(QfError::ServerError { code: ef.code, message: ef.message })
+                    Err(QfError::ServerError {
+                        code: ef.code,
+                        message: ef.message,
+                    })
                 }
                 other => Err(QfError::UnexpectedFrame(other)),
             }
@@ -322,26 +323,29 @@ impl Client {
         let (mut send, recv) = conn.open_bi().await?;
 
         let req = Request {
-            id:      Uuid::new_v4().to_string(),
-            method:  method.to_string(),
-            path:    path.to_string(),
+            id: Uuid::new_v4().to_string(),
+            method: method.to_string(),
+            path: path.to_string(),
             headers,
             body,
-            stream:  true,
+            stream: true,
         };
 
         protocol::write_frame(&mut send, protocol::FRAME_REQUEST, &req).await?;
         send.finish()?;
 
         // Read the initial response header frame.
-        let (mut recv_read, recv_rest) = tokio::io::split(recv);
-        let frame = protocol::read_frame(&mut recv_read).await?;
+        let mut recv = recv;
+        let frame = protocol::read_frame(&mut recv).await?;
 
         let init_resp = match frame.frame_type {
             FRAME_RESPONSE => protocol::decode_response(&frame.payload)?,
             FRAME_ERROR => {
                 let ef = protocol::decode_error(&frame.payload)?;
-                return Err(QfError::ServerError { code: ef.code, message: ef.message });
+                return Err(QfError::ServerError {
+                    code: ef.code,
+                    message: ef.message,
+                });
             }
             other => return Err(QfError::UnexpectedFrame(other)),
         };
@@ -353,12 +357,12 @@ impl Client {
         }
 
         let meta = QfResponse {
-            status:  init_resp.status,
+            status: init_resp.status,
             headers: init_resp.headers,
-            body:    vec![],
+            body: vec![],
         };
 
-        Ok((meta, StreamHandle::new(recv_read)))
+        Ok((meta, StreamHandle::new(recv)))
     }
 
     // ── Keep-alive ping ────────────────────────────────────────────────────

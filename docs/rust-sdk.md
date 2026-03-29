@@ -2,6 +2,8 @@
 
 The Rust SDK lives in `sdk/rust` and provides a native QUIC client built on `quinn` and `rmp-serde`.
 
+For Android/iOS/Linux/macOS/Windows consumers via C bindings, see `docs/ffi-sdk.md`.
+
 Crate metadata:
 
 - package name: `quicframe-client`

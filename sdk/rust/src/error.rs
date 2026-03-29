@@ -19,6 +19,10 @@ pub enum QfError {
     #[error("quic write error: {0}")]
     Write(#[from] quinn::WriteError),
 
+    /// QUIC stream was closed unexpectedly.
+    #[error("quic closed stream: {0}")]
+    ClosedStream(#[from] quinn::ClosedStream),
+
     /// QUIC read error.
     #[error("quic read error: {0}")]
     Read(#[from] quinn::ReadError),
