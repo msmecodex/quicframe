@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { QuicFrameClient } from "@quicframe/client";
 
 const transportUrl = "https://localhost:4434/wt";
-const serverCertificateHashHex = "b05bd5c61181de90d77b9230b03a5a338b675f3136b77b4aae789949bafabc7e";
+const serverCertificateHashHex = "7b5dfb59d1345491f1781b38e2735c3391e80d2dbc508fff55501dc2170269d9";
 
 function hexToUint8Array(hex) {
   if (!hex) {
@@ -34,12 +34,19 @@ function createClient() {
       }
     : undefined;
 
-  return new QuicFrameClient(transportUrl, { webTransportOptions });
+  return new QuicFrameClient(transportUrl, {
+    webTransportOptions,
+    debug: true
+  });
 }
 
 function decodeResponse(response) {
   const payload = response.decode();
   return payload && typeof payload === "object" ? payload : null;
+}
+
+function logUiEvent(event, data) {
+  console.debug(`[react-basic] ${event}`, data);
 }
 
 export default function App() {
@@ -100,8 +107,10 @@ export default function App() {
   }
 
   async function loadPing(client = clientRef.current) {
+    logUiEvent("request", { method: "GET", path: "/ping" });
     const response = await client.get("/ping");
     const payload = decodeResponse(response);
+    logUiEvent("response", { method: "GET", path: "/ping", status: response.status, payload });
     setPingData({
       status: response.status,
       body: payload
@@ -109,8 +118,10 @@ export default function App() {
   }
 
   async function loadUsers(client = clientRef.current) {
+    logUiEvent("request", { method: "GET", path: "/users" });
     const response = await client.get("/users");
     const payload = decodeResponse(response);
+    logUiEvent("response", { method: "GET", path: "/users", status: response.status, payload });
     setUsers(Array.isArray(payload?.users) ? payload.users : []);
   }
 
@@ -124,8 +135,10 @@ export default function App() {
     setError("");
 
     try {
+      logUiEvent("request", { method: "POST", path: "/users", body: form });
       const response = await clientRef.current.post("/users", form);
       const createdUser = decodeResponse(response);
+      logUiEvent("response", { method: "POST", path: "/users", status: response.status, payload: createdUser });
 
       if (createdUser) {
         setUsers((currentUsers) => [...currentUsers, createdUser]);

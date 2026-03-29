@@ -67,6 +67,8 @@ It demonstrates:
 - calling `GET /ping`
 - calling `GET /users`
 - creating a user with `POST /users`
+- storing the submitted `name` in the basic server's in-memory users list
+- printing request / response debug logs in the browser console
 
 Run it like this:
 
@@ -85,7 +87,14 @@ Notes:
 - the basic server persists its local certificate under `.local/certs/basic-server`
 - on startup, the basic server logs `webtransport_cert_sha256`; copy that value into `serverCertificateHashHex` in `examples/react-basic/src/App.jsx`
 - the local development certificate is intentionally short-lived so Chrome can accept it with `serverCertificateHashes`
+- the React example enables `debug: true`, so browser console logs show connect, request, and response events
+- `POST /users` saves the submitted `name` in the basic server's in-memory array, and `GET /users` returns the updated list
 - this example is focused on the WebTransport path, because the basic server is not exposing separate HTTP fallback endpoints
+
+If you want to inspect the calls while developing:
+
+- open the browser console to see `[quicframe]` and `[react-basic]` logs
+- use the Network tab to inspect the `https://localhost:4434/wt` WebTransport session rather than expecting separate XHR rows for each route
 
 When consuming from npm, the package resolves from `dist/` automatically through `package.json` exports.
 

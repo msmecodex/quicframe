@@ -11,10 +11,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"syscall"
 
 	"github.com/vmihailenco/msgpack/v5"
@@ -25,6 +27,29 @@ import (
 )
 
 func main() {
+	var (
+		usersMu sync.Mutex
+		nextID  = 3
+		users   = []map[string]string{
+			{"id": "1", "name": "Alice"},
+			{"id": "2", "name": "Bob"},
+		}
+	)
+
+	copyUsers := func() []map[string]string {
+		usersMu.Lock()
+		defer usersMu.Unlock()
+
+		cloned := make([]map[string]string, 0, len(users))
+		for _, user := range users {
+			cloned = append(cloned, map[string]string{
+				"id":   user["id"],
+				"name": user["name"],
+			})
+		}
+		return cloned
+	}
+
 	app := qf.New()
 
 	app.Use(
@@ -39,24 +64,42 @@ func main() {
 	})
 
 	app.GET("/users", func(c *qf.Context) error {
-		users := []map[string]string{
-			{"id": "1", "name": "Alice"},
-			{"id": "2", "name": "Bob"},
-		}
-		return c.MsgPack(200, map[string]interface{}{"users": users})
+		return c.MsgPack(200, map[string]interface{}{"users": copyUsers()})
 	})
 
 	app.GET("/users/:id", func(c *qf.Context) error {
-		return c.MsgPack(200, map[string]string{"id": c.Param("id"), "name": "Alice"})
+		usersMu.Lock()
+		defer usersMu.Unlock()
+
+		for _, user := range users {
+			if user["id"] == c.Param("id") {
+				return c.MsgPack(200, user)
+			}
+		}
+		return c.Error(404, "user not found")
 	})
 
 	app.POST("/users", func(c *qf.Context) error {
-		var body map[string]interface{}
+		var body struct {
+			Name string `msgpack:"name"`
+		}
 		if err := c.Bind(&body); err != nil {
 			return c.Error(400, err.Error())
 		}
-		body["id"] = "new-id"
-		return c.MsgPack(201, body)
+		if body.Name == "" {
+			return c.Error(400, "name is required")
+		}
+
+		usersMu.Lock()
+		user := map[string]string{
+			"id":   fmt.Sprintf("%d", nextID),
+			"name": body.Name,
+		}
+		nextID++
+		users = append(users, user)
+		usersMu.Unlock()
+
+		return c.MsgPack(201, user)
 	})
 
 	app.DELETE("/users/:id", func(c *qf.Context) error {

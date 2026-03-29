@@ -123,12 +123,14 @@ export class QuicFrameClient {
    * @param {Record<string,string>} [opts.defaultHeaders]  merged into every request
    * @param {string} [opts.fallbackBase]  HTTP base URL for the fetch fallback
    * @param {WebTransportOptions} [opts.webTransportOptions] extra WebTransport constructor options
+   * @param {boolean} [opts.debug] enable console debug logging
    */
   constructor(url, opts = {}) {
     this._url            = url;
     this._defaultHeaders = opts.defaultHeaders ?? {};
     this._fallbackBase   = opts.fallbackBase  ?? null;
     this._wtOptions      = opts.webTransportOptions ?? {};
+    this._debug          = opts.debug ?? false;
     this._transport      = null;   // WebTransport instance
     this._useFallback    = false;
   }
@@ -140,22 +142,27 @@ export class QuicFrameClient {
     if (typeof WebTransport === 'undefined') {
       console.warn('[quicframe] WebTransport not available – falling back to fetch');
       this._useFallback = true;
+      this._log('connect:fallback', { reason: 'webtransport-unavailable' });
       return;
     }
 
     try {
+      this._log('connect:start', { url: this._url, hasCertificateHashes: Array.isArray(this._wtOptions?.serverCertificateHashes) && this._wtOptions.serverCertificateHashes.length > 0 });
       this._transport = new WebTransport(this._url, this._wtOptions);
       await this._transport.ready;
       console.info('[quicframe] WebTransport connected');
+      this._log('connect:ready', { url: this._url });
     } catch (err) {
       console.warn('[quicframe] WebTransport connection failed, falling back to fetch:', err);
       this._useFallback = true;
+      this._log('connect:error', err);
     }
   }
 
   /** Close the WebTransport session. */
   async close() {
     if (this._transport) {
+      this._log('connect:close', { url: this._url });
       this._transport.close();
       this._transport = null;
     }
@@ -200,6 +207,13 @@ export class QuicFrameClient {
    */
   async request(method, path, headers = {}, body = null) {
     const merged = { ...this._defaultHeaders, ...headers };
+    this._log('request:start', {
+      transport: !this._useFallback && this._transport ? 'webtransport' : 'fetch',
+      method,
+      path,
+      headers: merged,
+      body,
+    });
 
     if (!this._useFallback && this._transport) {
       return this._wtRequest(method, path, merged, body);
@@ -318,8 +332,25 @@ export class QuicFrameClient {
 
       switch (f.frameType) {
         case FRAME_RESPONSE:
-          return new QfResponse(f.payload.status, f.payload.headers ?? {}, f.payload.body ?? new Uint8Array(0));
+          {
+            const response = new QfResponse(f.payload.status, f.payload.headers ?? {}, f.payload.body ?? new Uint8Array(0));
+            this._log('request:response', {
+              transport: 'webtransport',
+              method,
+              path,
+              status: response.status,
+              headers: response.headers,
+              body: safeDecodeBody(response.rawBody),
+            });
+            return response;
+          }
         case FRAME_ERROR:
+          this._log('request:error', {
+            transport: 'webtransport',
+            method,
+            path,
+            error: f.payload,
+          });
           throw new QuicFrameError(f.payload.code, f.payload.message);
         default:
           // Ignore unexpected frames; keep reading.
@@ -357,9 +388,31 @@ export class QuicFrameClient {
 
     const res = await fetch(url, fetchOpts);
     const rawBody = new Uint8Array(await res.arrayBuffer());
+    this._log('request:response', {
+      transport: 'fetch',
+      method,
+      path,
+      status: res.status,
+      headers: Object.fromEntries(res.headers.entries()),
+      body: safeDecodeBody(rawBody),
+    });
 
     return new QfResponse(res.status, Object.fromEntries(res.headers.entries()), rawBody);
+  }
+
+  _log(event, data) {
+    if (!this._debug) return;
+    console.debug(`[quicframe] ${event}`, data);
   }
 }
 
 export { QfResponse };
+
+function safeDecodeBody(body) {
+  if (!body || body.byteLength === 0) return null;
+  try {
+    return decode(body);
+  } catch {
+    return body;
+  }
+}

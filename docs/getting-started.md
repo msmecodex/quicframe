@@ -140,6 +140,8 @@ npm run dev
 
 When the basic server starts, it logs `webtransport_cert_sha256`. Paste that hash into `examples/react-basic/src/App.jsx` for local WebTransport with the generated self-signed certificate.
 
+The React example also enables console debug logs for QuicFrame requests, and the basic server keeps submitted `POST /users` names in memory so the updated list is visible on the next `GET /users`.
+
 ## Related Guides
 
 - [architecture.md](architecture.md)

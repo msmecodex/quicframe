@@ -375,6 +375,8 @@ npm run dev
 
 The basic server prints a `webtransport_cert_sha256` value on startup. Paste that into `examples/react-basic/src/App.jsx` when using the local self-signed certificate.
 
+The React example enables SDK debug logging in the browser console, and the basic server stores submitted `POST /users` names in an in-memory users slice that is returned by subsequent `GET /users` calls.
+
 ---
 
 ## Transport Architecture
