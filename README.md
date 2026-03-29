@@ -45,6 +45,8 @@ twaritam/
 ├── app.go                    # App entry point — both transports
 ├── router.go                 # Radix router + Group + middleware chaining
 ├── context.go                # Per-request Context + StreamWriter
+├── validation.go             # Body validation helpers and shared validator
+├── doc.go                    # Package overview
 │
 ├── protocol/
 │   ├── types.go              # Wire types: Request, Response, StreamChunk…
@@ -54,19 +56,26 @@ twaritam/
 │   ├── logger.go             # slog-based request logger
 │   ├── recovery.go           # Panic → 500 error frame
 │   ├── auth.go               # JWT middleware (HS256 / RS256 / ES256)
-│   └── ratelimit.go          # Token-bucket rate limiter (per-IP, self-evicting)
+│   ├── ratelimit.go          # Token-bucket rate limiter (per-IP, self-evicting)
+│   └── validation.go         # Header validation middleware
 │
 ├── tlsutil/certs.go          # Self-signed + Let's Encrypt helpers
 │
 ├── cmd/example/main.go       # Full-featured demo server
+├── docs/                     # Guides: protocol, middleware, validation, TLS, SDKs
 ├── examples/
 │   ├── basic-server/         # Minimal CRUD server
-│   └── streaming-demo/       # Streaming + backpressure demo
+│   ├── streaming-demo/       # Streaming + backpressure demo
+│   ├── react-basic/          # Browser demo app
+│   └── native-clients/       # Linux/Windows/macOS/Android/iOS samples
 │
 └── sdk/
-    ├── rust/                 # Rust client SDK (quinn)
+    ├── rust/                 # Rust client SDK + native FFI library
+    │   ├── include/
+    │   │   └── quicframe.h   # C header for native clients
     │   └── src/
     │       ├── lib.rs
+    │       ├── ffi.rs        # C ABI exports
     │       ├── client.rs     # Client, QfResponse, StreamHandle
     │       ├── transport.rs  # Connection pool
     │       ├── protocol.rs   # Wire codec (rmp-serde)
