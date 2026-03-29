@@ -66,12 +66,20 @@ func main() {
     })
 
     app.POST("/users", func(c *qf.Context) error {
-        var body map[string]interface{}
-        if err := c.Bind(&body); err != nil {
+        type CreateUserBody struct {
+            Name  string `msgpack:"name" validate:"required,min=2"`
+            Email string `msgpack:"email" validate:"required,email"`
+        }
+
+        var body CreateUserBody
+        if err := c.BindAndValidate(&body); err != nil {
             return c.Error(400, err.Error())
         }
-        body["created"] = true
-        return c.MsgPack(201, body)
+        return c.MsgPack(201, map[string]any{
+            "created": true,
+            "name":    body.Name,
+            "email":   body.Email,
+        })
     })
 
     tlsCfg, err := tlsutil.LoadOrCreateSelfSigned(
@@ -116,7 +124,8 @@ Your app owns business logic and data access. QuicFrame handles transport, routi
 2. Create grouped routes with `app.Group("/api")`.
 3. Use `tlsutil.SelfSigned` for local development.
 4. Switch to `tlsutil.Autocert` or `tlsutil.FromFiles` for deployment.
-5. Add a Rust or JS client if you need native or browser consumers.
+5. Add `BindAndValidate` and `middleware.RequireHeaders(...)` for request validation.
+6. Add a Rust or JS client if you need native or browser consumers.
 
 ## Examples in This Repository
 

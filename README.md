@@ -200,6 +200,7 @@ func handler(c *quicframe.Context) error {
     // Decode msgpack body
     var payload MyStruct
     c.Bind(&payload)
+    c.BindAndValidate(&payload)
 
     // Locals (middleware → handler communication)
     c.Set("user_id", "abc")
@@ -231,6 +232,7 @@ middleware.Logger()                        // slog request log
 middleware.Recovery()                      // panic → 500
 middleware.RateLimitSimple(100)            // 100 req/s per IP
 middleware.JWTSimple([]byte("secret"))     // Bearer token validation
+middleware.RequireHeaders("x-tenant-id")   // Required headers
 
 // Custom middleware
 func Tracing() quicframe.MiddlewareFunc {

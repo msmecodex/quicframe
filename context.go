@@ -84,6 +84,14 @@ func (c *Context) Bind(v interface{}) error {
 	return nil
 }
 
+// BindAndValidate decodes the request body and validates it using `validate` tags.
+func (c *Context) BindAndValidate(v interface{}) error {
+	if err := c.Bind(v); err != nil {
+		return err
+	}
+	return Validate(v)
+}
+
 // RemoteAddr returns the network address of the connected peer.
 func (c *Context) RemoteAddr() net.Addr { return c.conn.RemoteAddr() }
 
