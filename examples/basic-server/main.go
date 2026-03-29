@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -81,13 +82,10 @@ func main() {
 
 	app.POST("/users", func(c *qf.Context) error {
 		var body struct {
-			Name string `msgpack:"name"`
+			Name string `msgpack:"name" validate:"required,min=2"`
 		}
-		if err := c.Bind(&body); err != nil {
+		if err := c.BindAndValidate(&body); err != nil {
 			return c.Error(400, err.Error())
-		}
-		if body.Name == "" {
-			return c.Error(400, "name is required")
 		}
 
 		usersMu.Lock()
@@ -100,6 +98,27 @@ func main() {
 		usersMu.Unlock()
 
 		return c.MsgPack(201, user)
+	})
+
+	tenantAPI := app.Group(
+		"/tenant",
+		middleware.RequireHeaders("x-tenant-id"),
+		middleware.ValidateHeaders(map[string]middleware.HeaderRule{
+			"x-tenant-id": func(value string) error {
+				value = strings.TrimSpace(value)
+				if len(value) < 3 {
+					return fmt.Errorf("invalid x-tenant-id header")
+				}
+				return nil
+			},
+		}),
+	)
+
+	tenantAPI.GET("/users", func(c *qf.Context) error {
+		return c.MsgPack(200, map[string]interface{}{
+			"tenant": c.Header("x-tenant-id"),
+			"users":  copyUsers(),
+		})
 	})
 
 	app.DELETE("/users/:id", func(c *qf.Context) error {
