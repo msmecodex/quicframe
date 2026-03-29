@@ -33,8 +33,7 @@ Browser           ── WebTransport ───┘      MsgPack · Router · Mid
 - **Middleware** — chainable, Express-style: Logger, Recovery, JWT, Rate Limiter
 - **Streaming** — server-push via `StreamWriter`, with backpressure
 - **TLS** — self-signed (dev) or Let's Encrypt autocert (production)
-- **Rust SDK** — quinn + rmp-serde, connection pool, retry, streaming
-- **Native FFI SDK** — C ABI for Android, iOS, Linux, macOS, Windows
+- **Native client SDK** — Rust-powered C ABI for Android, iOS, Linux, macOS, Windows
 - **Browser SDK** — WebTransport + `@msgpack/msgpack`, automatic fetch fallback
 
 ---
@@ -125,7 +124,7 @@ StreamChunk { id, seq uint64, data bytes, final bool }
 ### Prerequisites
 
 - Go 1.24+
-- Rust 1.80+ (for Rust SDK)
+- Rust 1.80+ (for native client SDK builds)
 - Node.js 20+ (for browser SDK)
 
 ### Run the example server
@@ -263,57 +262,144 @@ tlsCfg, err := tlsutil.FromFiles("cert.pem", "key.pem")
 
 ---
 
-## Rust SDK
+## Native Clients
 
-```toml
-# Cargo.toml
-[dependencies]
-quicframe-client = { path = "sdk/rust" }
-tokio = { version = "1", features = ["full"] }
-```
+The native client surface is exposed through the C ABI in `sdk/rust/include/quicframe.h`.
 
-```rust
-use quicframe::{Client, ClientConfig, PoolConfig};
-use std::collections::HashMap;
+Build artifacts by platform:
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cfg = ClientConfig::default();
-    cfg.pool.skip_cert_verify = true; // dev only
+- Linux / Android: `libquicframe.so`
+- macOS: `libquicframe.dylib`
+- Windows: `quicframe.dll`
+- iOS: `libquicframe.a` packaged as an `.xcframework`
 
-    let client = Client::connect("127.0.0.1:4433", "localhost", cfg).await?;
+See `docs/ffi-sdk.md` for build commands and packaging details.
 
-    // GET
-    let resp = client.get("/ping", HashMap::new()).await?;
-    println!("status={}", resp.status);
-    let body: HashMap<String, String> = resp.decode()?;
+### Linux (C)
 
-    // POST with msgpack body
-    let user = std::collections::HashMap::from([("name", "Alice")]);
-    let resp = client.post("/api/v1/users", &user, headers).await?;
+```c
+#include "quicframe.h"
+#include <stdio.h>
 
-    // Streaming
-    let (meta, mut stream) = client
-        .stream("GET", "/stream/10", HashMap::new(), vec![])
-        .await?;
-    while let Some(chunk) = stream.next().await? {
-        println!("chunk data={:?}", chunk.data);
+int main(void) {
+    QfClientOptions options = qf_client_options_default();
+    options.skip_cert_verify = true;
+
+    QfClientHandle* client = NULL;
+    QfErrorInfo error = {0};
+    QfResponse response = {0};
+
+    if (!qf_client_connect("127.0.0.1:4433", "localhost", options, &client, &error)) {
+        fprintf(stderr, "connect failed: %s\n", error.message);
+        qf_error_free(&error);
+        return 1;
     }
 
-    // Ping (RTT measurement)
-    let rtt = client.ping().await?;
-    println!("RTT = {:?}", rtt);
+    if (!qf_client_request(client, "GET", "/ping", NULL, 0, NULL, 0, &response, &error)) {
+        fprintf(stderr, "request failed: %s\n", error.message);
+        qf_error_free(&error);
+        qf_client_close(client);
+        qf_client_free(client);
+        return 1;
+    }
 
-    client.close().await;
-    Ok(())
+    printf("status=%d body_len=%zu\n", response.status, response.body.len);
+    qf_response_free(&response);
+    qf_client_close(client);
+    qf_client_free(client);
+    return 0;
 }
 ```
 
-Run the bundled example:
+### Windows (C#)
 
-```bash
-cd sdk/rust
-cargo run --bin qf-example -- --addr 127.0.0.1:4433
+```csharp
+using System;
+using System.Runtime.InteropServices;
+
+internal static class QuicFrameNative
+{
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct QfClientOptions
+    {
+        public UIntPtr max_connections;
+        public ulong idle_timeout_ms;
+        public ulong request_timeout_ms;
+        public uint max_retries;
+        public ulong retry_base_delay_ms;
+        [MarshalAs(UnmanagedType.I1)]
+        public bool skip_cert_verify;
+    }
+
+    [DllImport("quicframe", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern QfClientOptions qf_client_options_default();
+}
+```
+
+### macOS (Swift)
+
+```swift
+import Foundation
+
+var options = qf_client_options_default()
+options.skip_cert_verify = true
+
+var client: UnsafeMutablePointer<QfClientHandle>?
+var error = QfErrorInfo()
+
+let ok = "127.0.0.1:4433".withCString { addr in
+    "localhost".withCString { serverName in
+        qf_client_connect(addr, serverName, options, &client, &error)
+    }
+}
+
+if !ok, let message = error.message {
+    print("connect failed: \(String(cString: message))")
+    qf_error_free(&error)
+}
+```
+
+### Android (Kotlin + JNI)
+
+```kotlin
+object QuicFrameNative {
+    init {
+        System.loadLibrary("quicframe")
+    }
+
+    external fun qf_client_options_default(): QfClientOptions
+}
+
+data class QfClientOptions(
+    val max_connections: Long,
+    val idle_timeout_ms: Long,
+    val request_timeout_ms: Long,
+    val max_retries: Int,
+    val retry_base_delay_ms: Long,
+    val skip_cert_verify: Boolean,
+)
+```
+
+### iOS (Swift)
+
+```swift
+import Foundation
+
+var options = qf_client_options_default()
+options.skip_cert_verify = true
+
+var client: UnsafeMutablePointer<QfClientHandle>?
+var error = QfErrorInfo()
+
+let connected = "127.0.0.1:4433".withCString { addr in
+    "localhost".withCString { serverName in
+        qf_client_connect(addr, serverName, options, &client, &error)
+    }
+}
+
+if !connected, let message = error.message {
+    fatalError(String(cString: message))
+}
 ```
 
 ---
@@ -428,7 +514,7 @@ QuicFrame uses HTTP-semantic status codes for developer familiarity:
 
 - **QUIC multiplexing** — thousands of concurrent streams per connection; no per-request connection overhead
 - **MsgPack** — ~30% smaller payloads than JSON; zero-allocation decode possible with pre-allocated structs
-- **Connection pooling** (Rust SDK) — configurable pool of up to N connections; round-robin stream distribution
+- **Connection pooling** (native client SDK) — configurable pool of up to N connections; round-robin stream distribution
 - **Goroutine-per-stream** — each QUIC stream dispatches to a lightweight goroutine; the scheduler handles backpressure naturally
 - **0-RTT on reconnect** — QUIC session tickets allow resuming sessions with zero round trips after a brief disconnect
 - **UDP / CGNAT** — QUIC's UDP base works through most NATs; for carrier-grade NAT environments pair with a QUIC relay (e.g. MASQUE)
@@ -457,7 +543,7 @@ QuicFrame uses HTTP-semantic status codes for developer familiarity:
 | `golang.org/x/crypto/acme/autocert` | Let's Encrypt TLS |
 | `golang.org/x/time/rate` | Rate limiter |
 
-### Rust SDK
+### Native client SDK
 
 | Crate | Purpose |
 |-------|---------|
