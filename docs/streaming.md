@@ -99,6 +99,7 @@ A streaming client should:
 ## Examples in This Repository
 
 - `examples/streaming-demo`
+- `examples/react-streaming-chat`
 - `/stream/:count` in `cmd/example`
 - `/events` in `cmd/example`
 
@@ -108,3 +109,4 @@ A streaming client should:
 - Include sequence numbers or timestamps in chunk data if the client needs them.
 - Close streams explicitly with `defer sw.Close()`.
 - Treat disconnect write errors as expected unless they indicate a server bug.
+- Room chat is a natural fit for streaming: one endpoint can keep each browser subscribed while separate requests publish messages into the room.

@@ -2,5 +2,10 @@ sdk/js/node_modules
 sdk/js/dist
 sdk/rust/target
 
+examples/basic-server/.local
 examples/react-basic/node_modules
+examples/streaming-demo/.local
+examples/react-streaming-chat/dist
+examples/react-streaming-chat/node_modules
 .local/
+.vscode

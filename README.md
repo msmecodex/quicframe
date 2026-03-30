@@ -67,6 +67,7 @@ twaritam/
 │   ├── basic-server/         # Minimal CRUD server
 │   ├── streaming-demo/       # Streaming + backpressure demo
 │   ├── react-basic/          # Browser demo app
+│   ├── react-streaming-chat/ # Browser streaming chat demo
 │   └── native-clients/       # Linux/Windows/macOS/Android/iOS samples
 │
 └── sdk/
@@ -160,7 +161,19 @@ go run ./examples/streaming-demo
 # GET /stream/ticks     — tick every 200 ms for 60 s
 # GET /stream/batch/:n  — n items as fast as possible
 # GET /stream/slow/:n   — 1 item/s (backpressure demo)
+# GET /chat/rooms/:room/stream    — room subscription stream
+# POST /chat/rooms/:room/messages — room chat message broadcast
 ```
+
+### Run the React streaming chat example
+
+```bash
+cd examples/react-streaming-chat
+npm install
+npm run dev
+```
+
+Open the app in two browsers, join the same room name, and messages will appear in both windows.
 
 ---
 
