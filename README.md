@@ -137,6 +137,12 @@ StreamChunk { id, seq uint64, data bytes, final bool }
 - Rust 1.80+ (for native client SDK builds)
 - Node.js 20+ (for browser SDK)
 
+### Install QuicFrame
+
+```bash
+go install github.com/msmecodex/quicframe@latest
+```
+
 ### Run the example server
 
 ```bash
