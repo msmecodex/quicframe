@@ -22,6 +22,29 @@ Current Go module path:
 go get github.com/msmecodex/quicframe@latest
 ```
 
+This module is a library. If you try:
+
+```bash
+go install github.com/msmecodex/quicframe@latest
+```
+
+Go will fail with `package github.com/msmecodex/quicframe is not a main package` because the module root is not an executable command.
+
+If you want a `go install`-friendly QuicFrame command, install the CLI package instead:
+
+```bash
+go install github.com/msmecodex/quicframe/cmd/quicframe@latest
+```
+
+Create a starter project with:
+
+```bash
+quicframe new myapp
+cd myapp
+go mod tidy
+go run .
+```
+
 Note:
 
 - the source repository is `https://github.com/msmecodex/quicframe/`
@@ -136,6 +159,12 @@ cd quicframe
 go run ./examples/basic-server
 go run ./examples/streaming-demo
 go run ./cmd/example
+```
+
+If you want an installable demo binary instead of running from a cloned checkout, use:
+
+```bash
+go install github.com/msmecodex/quicframe/cmd/example@latest
 ```
 
 React browser example:

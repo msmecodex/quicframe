@@ -8,6 +8,8 @@ If you are consuming the framework from another Go project, install it using the
 go get github.com/msmecodex/quicframe@latest
 ```
 
+Use `go get` here because `github.com/msmecodex/quicframe` is a library module. `go install github.com/msmecodex/quicframe@latest` will fail unless you target an actual command package such as `github.com/msmecodex/quicframe/cmd/quicframe@latest` or `github.com/msmecodex/quicframe/cmd/example@latest`.
+
 ## App Configuration
 
 ## Logger

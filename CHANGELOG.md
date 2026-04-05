@@ -10,6 +10,7 @@ The format is inspired by Keep a Changelog and follows semantic versioning for t
 - Root package documentation in `doc.go` for `pkg.go.dev` and module consumers.
 - End-user guides in `docs/` covering setup, routing, middleware, context usage, streaming, TLS, protocol details, SDKs, architecture, and configuration.
 - Initial changelog for repository and release tracking.
+- Installable `quicframe` CLI in `cmd/quicframe` with `new`, `help`, and `version` commands for starter project scaffolding.
 
 ## [0.1.0]
 

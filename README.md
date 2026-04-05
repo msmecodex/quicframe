@@ -61,6 +61,7 @@ twaritam/
 │
 ├── tlsutil/certs.go          # Self-signed + Let's Encrypt helpers
 │
+├── cmd/quicframe/main.go     # Installable CLI (`quicframe new`, `quicframe version`)
 ├── cmd/example/main.go       # Full-featured demo server
 ├── docs/                     # Guides: protocol, middleware, validation, TLS, SDKs
 ├── examples/
@@ -137,19 +138,42 @@ StreamChunk { id, seq uint64, data bytes, final bool }
 - Rust 1.80+ (for native client SDK builds)
 - Node.js 20+ (for browser SDK)
 
-### Install QuicFrame
+### Add QuicFrame To A Go Project
 
 ```bash
-go install github.com/msmecodex/quicframe@latest
+go get github.com/msmecodex/quicframe@latest
 ```
 
-### Run the example server
+`github.com/msmecodex/quicframe` is a library module, not a `main` package, so `go install github.com/msmecodex/quicframe@latest` will fail.
+
+### Install the QuicFrame CLI
+
+```bash
+go install github.com/msmecodex/quicframe/cmd/quicframe@latest
+```
+
+Then scaffold a starter app:
+
+```bash
+quicframe new myapp
+cd myapp
+go mod tidy
+go run .
+```
+
+### Run the example server from this repository
 
 ```bash
 git clone https://github.com/msmecodex/quicframe/
 cd twaritam
 
 go run ./cmd/example
+```
+
+### Install the example binary
+
+```bash
+go install github.com/msmecodex/quicframe/cmd/example@latest
 # Native QUIC: :4433   (ALPN qf/1)
 # WebTransport: :4434  (ALPN h3, endpoint /wt)
 ```
