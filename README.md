@@ -42,11 +42,16 @@ Browser           ── WebTransport ───┘      MsgPack · Router · Mid
 
 ```
 twaritam/
-├── app.go                    # App entry point — both transports
-├── router.go                 # Radix router + Group + middleware chaining
-├── context.go                # Per-request Context + StreamWriter
-├── validation.go             # Body validation helpers and shared validator
-├── doc.go                    # Package overview
+├── main.go                   # Root installable CLI entrypoint
+│
+├── framework/
+│   ├── app.go                # App entry point — both transports
+│   ├── router.go             # Radix router + Group + middleware chaining
+│   ├── context.go            # Per-request Context + StreamWriter
+│   ├── validation.go         # Body validation helpers and shared validator
+│   └── doc.go                # Framework package overview
+│
+├── internal/cli/cli.go       # Shared CLI implementation
 │
 ├── protocol/
 │   ├── types.go              # Wire types: Request, Response, StreamChunk…
@@ -141,15 +146,19 @@ StreamChunk { id, seq uint64, data bytes, final bool }
 ### Add QuicFrame To A Go Project
 
 ```bash
-go get github.com/msmecodex/quicframe@latest
+go get github.com/msmecodex/quicframe/framework@latest
 ```
 
-`github.com/msmecodex/quicframe` is a library module, not a `main` package, so `go install github.com/msmecodex/quicframe@latest` will fail.
+Import it from:
+
+```bash
+import qf "github.com/msmecodex/quicframe/framework"
+```
 
 ### Install the QuicFrame CLI
 
 ```bash
-go install github.com/msmecodex/quicframe/cmd/quicframe@latest
+go install github.com/msmecodex/quicframe@latest
 ```
 
 Then scaffold a starter app:
@@ -212,7 +221,13 @@ Open the app in two browsers, join the same room name, and messages will appear 
 ### App
 
 ```go
-app := quicframe.New()
+import (
+    qf "github.com/msmecodex/quicframe/framework"
+    "github.com/msmecodex/quicframe/middleware"
+    "github.com/msmecodex/quicframe/tlsutil"
+)
+
+app := qf.New()
 
 // Application-level middleware (runs before every handler)
 app.Use(
@@ -240,7 +255,7 @@ app.ListenAddr(ctx, ":4433", ":4434", tlsCfg)
 ### Context
 
 ```go
-func handler(c *quicframe.Context) error {
+func handler(c *qf.Context) error {
     // Request
     c.Method()      // "GET"
     c.Path()        // "/users/42"

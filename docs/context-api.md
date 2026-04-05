@@ -5,7 +5,7 @@
 Examples in this guide assume you imported the framework as:
 
 ```go
-import qf "github.com/msmecodex/quicframe"
+import qf "github.com/msmecodex/quicframe/framework"
 ```
 
 ## Request Access

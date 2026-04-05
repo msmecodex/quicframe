@@ -31,10 +31,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/msmecodex/quicframe/protocol"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/webtransport-go"
-	"github.com/msmecodex/quicframe/protocol"
 )
 
 // App is the top-level framework object.  Create one with New().
@@ -54,9 +54,9 @@ func New() *App {
 		quicCfg: &quic.Config{
 			MaxIncomingStreams:    4096,
 			MaxIncomingUniStreams: 256,
-			KeepAlivePeriod:      30 * time.Second,
-			MaxIdleTimeout:       5 * time.Minute,
-			EnableDatagrams:      true,
+			KeepAlivePeriod:       30 * time.Second,
+			MaxIdleTimeout:        5 * time.Minute,
+			EnableDatagrams:       true,
 		},
 	}
 }

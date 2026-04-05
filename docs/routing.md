@@ -5,7 +5,7 @@ QuicFrame provides a simple method-and-path router with support for static paths
 Examples in this guide assume:
 
 ```go
-import qf "github.com/msmecodex/quicframe"
+import qf "github.com/msmecodex/quicframe/framework"
 ```
 
 ## Registering Routes

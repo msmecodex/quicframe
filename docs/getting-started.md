@@ -1,6 +1,6 @@
 # Getting Started
 
-QuicFrame is a Go module that you can add to any application with `go get`, then use to build QUIC-native APIs, browser-facing WebTransport endpoints, and streaming services with a single handler model.
+QuicFrame ships as an installable CLI at the module root, while the Go framework itself lives in the `framework` package.
 
 Repository:
 
@@ -16,24 +16,16 @@ Repository:
 
 ## Install
 
-Current Go module path:
+Install the framework package into your app:
 
 ```bash
-go get github.com/msmecodex/quicframe@latest
+go get github.com/msmecodex/quicframe/framework@latest
 ```
 
-This module is a library. If you try:
+Install the CLI from the root module:
 
 ```bash
 go install github.com/msmecodex/quicframe@latest
-```
-
-Go will fail with `package github.com/msmecodex/quicframe is not a main package` because the module root is not an executable command.
-
-If you want a `go install`-friendly QuicFrame command, install the CLI package instead:
-
-```bash
-go install github.com/msmecodex/quicframe/cmd/quicframe@latest
 ```
 
 Create a starter project with:
@@ -48,13 +40,14 @@ go run .
 Note:
 
 - the source repository is `https://github.com/msmecodex/quicframe/`
-- the Go module path is `github.com/msmecodex/quicframe`
+- the CLI install path is `github.com/msmecodex/quicframe`
+- the Go framework import path is `github.com/msmecodex/quicframe/framework`
 
 Typical imports:
 
 ```go
 import (
-    qf "github.com/msmecodex/quicframe"
+    qf "github.com/msmecodex/quicframe/framework"
     "github.com/msmecodex/quicframe/middleware"
     "github.com/msmecodex/quicframe/tlsutil"
 )
@@ -69,7 +62,7 @@ import (
     "context"
     "log"
 
-    qf "github.com/msmecodex/quicframe"
+    qf "github.com/msmecodex/quicframe/framework"
     "github.com/msmecodex/quicframe/middleware"
     "github.com/msmecodex/quicframe/tlsutil"
 )

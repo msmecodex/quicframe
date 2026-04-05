@@ -2,13 +2,13 @@
 
 QuicFrame keeps the core API small, but there are still a few important knobs available in the framework and companion packages.
 
-If you are consuming the framework from another Go project, install it using the current module path:
+If you are consuming the framework from another Go project, install the framework package path:
 
 ```bash
-go get github.com/msmecodex/quicframe@latest
+go get github.com/msmecodex/quicframe/framework@latest
 ```
 
-Use `go get` here because `github.com/msmecodex/quicframe` is a library module. `go install github.com/msmecodex/quicframe@latest` will fail unless you target an actual command package such as `github.com/msmecodex/quicframe/cmd/quicframe@latest` or `github.com/msmecodex/quicframe/cmd/example@latest`.
+Use `go install github.com/msmecodex/quicframe@latest` when you want the CLI binary instead of the framework package.
 
 ## App Configuration
 

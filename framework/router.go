@@ -22,9 +22,9 @@ type route struct {
 type segmentKind uint8
 
 const (
-	segStatic    segmentKind = iota // literal match: "users"
-	segParam                        // named parameter: ":id"
-	segWildcard                     // tail wildcard: "*rest"
+	segStatic   segmentKind = iota // literal match: "users"
+	segParam                       // named parameter: ":id"
+	segWildcard                    // tail wildcard: "*rest"
 )
 
 type segment struct {

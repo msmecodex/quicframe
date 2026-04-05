@@ -6,7 +6,7 @@ Examples in this guide assume:
 
 ```go
 import (
-    qf "github.com/msmecodex/quicframe"
+    qf "github.com/msmecodex/quicframe/framework"
     "github.com/vmihailenco/msgpack/v5"
 )
 ```

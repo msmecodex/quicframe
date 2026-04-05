@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	qf "github.com/msmecodex/quicframe"
+	qf "github.com/msmecodex/quicframe/framework"
 )
 
 // Logger returns middleware that logs every request using slog.

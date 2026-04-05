@@ -2,7 +2,7 @@
 //
 // QuicFrame is designed to be used as a normal Go module dependency:
 //
-//	go get github.com/msmecodex/quicframe@latest
+//	go get github.com/msmecodex/quicframe/framework@latest
 //
 // It exposes an Express-style API for registering routes, attaching
 // middleware, and returning MsgPack responses over QUIC streams.
@@ -20,7 +20,7 @@
 //		"context"
 //		"log"
 //
-//		qf "github.com/msmecodex/quicframe"
+//		qf "github.com/msmecodex/quicframe/framework"
 //		"github.com/msmecodex/quicframe/middleware"
 //		"github.com/msmecodex/quicframe/tlsutil"
 //	)

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	qf "github.com/msmecodex/quicframe"
+	qf "github.com/msmecodex/quicframe/framework"
 	"github.com/msmecodex/quicframe/protocol"
 )
 

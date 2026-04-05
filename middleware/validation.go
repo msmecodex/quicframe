@@ -3,7 +3,7 @@ package middleware
 import (
 	"strings"
 
-	qf "github.com/msmecodex/quicframe"
+	qf "github.com/msmecodex/quicframe/framework"
 	"github.com/msmecodex/quicframe/protocol"
 )
 
