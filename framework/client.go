@@ -46,6 +46,13 @@ func Dial(ctx context.Context, addr string, tlsCfg *tls.Config, quicCfg *quic.Co
 	}, nil
 }
 
+// NewClientFromConn creates a Client from an existing QUIC connection.
+func NewClientFromConn(conn *quic.Conn) *Client {
+	return &Client{
+		conn: conn,
+	}
+}
+
 // Request sends a single request and returns the response.
 func (c *Client) Request(ctx context.Context, method, path string, body interface{}) (*protocol.Response, error) {
 	return c.RequestWithHeaders(ctx, method, path, nil, body)

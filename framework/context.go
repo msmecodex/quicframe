@@ -107,6 +107,15 @@ func (c *Context) PeerCertificates() []*x509.Certificate {
 	return c.conn.PeerCertificates()
 }
 
+// Client returns a quicframe Client that reuses the underlying connection.
+// This is only supported for native QUIC connections; returns nil for WebTransport.
+func (c *Context) Client() *Client {
+	if cw, ok := c.conn.(*quicConnWrapper); ok {
+		return NewClientFromConn(cw.Conn)
+	}
+	return nil
+}
+
 // Context returns the underlying request context.
 func (c *Context) Context() context.Context {
 	if c.ctx == nil {
