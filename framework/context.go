@@ -1,6 +1,8 @@
 package quicframe
 
 import (
+	"context"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"net"
@@ -33,15 +35,20 @@ type Context struct {
 
 	// sent guards against double-sends.
 	sent atomic.Bool
+
+	// ctx is the underlying request context.
+	ctx context.Context
 }
 
 // remoteAddrProvider is satisfied by quic.Connection and webtransport.Session.
 type remoteAddrProvider interface {
 	RemoteAddr() net.Addr
+	PeerCertificates() []*x509.Certificate
 }
 
-func newContext(req *protocol.Request, conn remoteAddrProvider, stream io.ReadWriter) *Context {
+func newContext(ctx context.Context, req *protocol.Request, conn remoteAddrProvider, stream io.ReadWriter) *Context {
 	return &Context{
+		ctx:     ctx,
 		Request: req,
 		conn:    conn,
 		stream:  stream,
@@ -94,6 +101,19 @@ func (c *Context) BindAndValidate(v interface{}) error {
 
 // RemoteAddr returns the network address of the connected peer.
 func (c *Context) RemoteAddr() net.Addr { return c.conn.RemoteAddr() }
+
+// PeerCertificates returns the certificate chain provided by the peer.
+func (c *Context) PeerCertificates() []*x509.Certificate {
+	return c.conn.PeerCertificates()
+}
+
+// Context returns the underlying request context.
+func (c *Context) Context() context.Context {
+	if c.ctx == nil {
+		return context.Background()
+	}
+	return c.ctx
+}
 
 // ─── Context locals ──────────────────────────────────────────────────────────
 

@@ -93,6 +93,28 @@ func JWTSimple(secret []byte) qf.MiddlewareFunc {
 	})
 }
 
+// MTLSAuth returns middleware that verifies the incoming connection's peer certificates.
+// On success, it extracts the NodeID from the certificate and stores it in ctx locals.
+func MTLSAuth() qf.MiddlewareFunc {
+	return func(next qf.HandlerFunc) qf.HandlerFunc {
+		return func(ctx *qf.Context) error {
+			certs := ctx.PeerCertificates()
+			if len(certs) == 0 {
+				return ctx.Error(protocol.StatusUnauthorized, "mTLS: missing peer certificates")
+			}
+
+			// Extract NodeID from Common Name (standard for this PKI architecture)
+			nodeID := certs[0].Subject.CommonName
+			if nodeID == "" {
+				return ctx.Error(protocol.StatusUnauthorized, "mTLS: identity missing in certificate")
+			}
+
+			ctx.Set("node_id", nodeID)
+			return next(ctx)
+		}
+	}
+}
+
 // GetClaims extracts the JWT MapClaims stored by the JWT middleware.
 // Returns nil if the middleware was not applied or claims are a custom type.
 func GetClaims(ctx *qf.Context) jwt.MapClaims {

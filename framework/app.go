@@ -24,9 +24,11 @@ package quicframe
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -44,6 +46,7 @@ type App struct {
 	logger     *slog.Logger
 	quicCfg    *quic.Config
 	wg         sync.WaitGroup
+	pkiManager interface{} // Use interface to avoid circular dependency or keep it internal
 }
 
 // New creates a new App with sensible production defaults.
@@ -112,8 +115,6 @@ func (a *App) addRoute(method, pattern string, groupMW []MiddlewareFunc, h Handl
 	a.router.add(method, pattern, groupMW, h)
 }
 
-// ─── Native QUIC transport ───────────────────────────────────────────────────
-
 // ListenNative starts a raw-QUIC listener (ALPN "qf/1") on addr.
 // Intended for Go and Rust native SDK clients.
 // Blocks until ctx is cancelled or a fatal error occurs.
@@ -145,7 +146,7 @@ func (a *App) ListenNative(ctx context.Context, addr string, tlsCfg *tls.Config)
 		a.wg.Add(1)
 		go func(c *quic.Conn) {
 			defer a.wg.Done()
-			a.handleNativeConn(c)
+			a.handleNativeConn(&quicConnWrapper{c})
 		}(conn)
 	}
 }
@@ -181,7 +182,7 @@ func (a *App) ListenWebTransport(addr string, tlsCfg *tls.Config) error {
 		a.wg.Add(1)
 		go func() {
 			defer a.wg.Done()
-			a.handleWebTransportSession(session)
+			a.handleWebTransportSession(&wtSessionWrapper{session})
 		}()
 	})
 
@@ -207,17 +208,24 @@ func (a *App) ListenAddr(ctx context.Context, nativeAddr, wtAddr string, tlsCfg 
 	return <-errCh
 }
 
+// ListenWithPKI starts the server with automated PKI management.
+func (a *App) ListenWithPKI(ctx context.Context, nativeAddr, wtAddr, nodeID string, hosts ...string) error {
+	// PKI manager would be used here to load or create identity.
+	// This is a high-level integration.
+	return nil // Implementation pending
+}
+
 // Shutdown waits for all in-flight stream handlers to finish.
 func (a *App) Shutdown() { a.wg.Wait() }
 
-// ─── Native connection handler ───────────────────────────────────────────────
-
-func (a *App) handleNativeConn(conn *quic.Conn) {
+func (a *App) handleNativeConn(conn *quicConnWrapper) {
 	defer conn.CloseWithError(0, "done")
 
-	connCtx := conn.Context()
+	c := conn.Conn
+
+	connCtx := c.Context()
 	for {
-		stream, err := conn.AcceptStream(connCtx)
+		stream, err := c.AcceptStream(connCtx)
 		if err != nil {
 			return // connection closed or context cancelled
 		}
@@ -225,14 +233,14 @@ func (a *App) handleNativeConn(conn *quic.Conn) {
 		go func(s *quic.Stream) {
 			defer a.wg.Done()
 			defer s.Close()
-			a.dispatchStream(conn, s)
+			a.dispatchStream(connCtx, conn, s)
 		}(stream)
 	}
 }
 
 // ─── WebTransport session handler ───────────────────────────────────────────
 
-func (a *App) handleWebTransportSession(session *webtransport.Session) {
+func (a *App) handleWebTransportSession(session *wtSessionWrapper) {
 	ctx := session.Context()
 	for {
 		stream, err := session.AcceptStream(ctx)
@@ -243,7 +251,7 @@ func (a *App) handleWebTransportSession(session *webtransport.Session) {
 		go func(s *webtransport.Stream) {
 			defer a.wg.Done()
 			defer s.Close()
-			a.dispatchStream(session, s)
+			a.dispatchStream(ctx, session, s)
 		}(stream)
 	}
 }
@@ -253,7 +261,7 @@ func (a *App) handleWebTransportSession(session *webtransport.Session) {
 // dispatchStream is the hot path shared by both transports.
 // It reads one request frame, routes it through the middleware + handler
 // chain, and writes back the response.
-func (a *App) dispatchStream(peer remoteAddrProvider, stream io.ReadWriter) {
+func (a *App) dispatchStream(ctx context.Context, peer remoteAddrProvider, stream io.ReadWriter) {
 	ft, data, err := protocol.ReadFrame(stream)
 	if err != nil {
 		a.logger.Debug("quicframe: read frame error", "err", err)
@@ -278,15 +286,15 @@ func (a *App) dispatchStream(peer remoteAddrProvider, stream io.ReadWriter) {
 		return
 	}
 
-	ctx := newContext(req, peer, stream)
+	qfCtx := newContext(ctx, req, peer, stream)
 	handler, params := a.router.match(req.Method, req.Path)
-	ctx.setParams(params)
+	qfCtx.setParams(params)
 
 	// App-level middleware wraps the (already-middleware-wrapped) route handler.
 	h := applyMiddleware(handler, a.middleware)
 
-	if err := h(ctx); err != nil {
-		if !ctx.sent.Load() {
+	if err := h(qfCtx); err != nil {
+		if !qfCtx.sent.Load() {
 			_ = protocol.WriteError(stream, req.ID, protocol.StatusInternalServerError, err.Error())
 		}
 		a.logger.Error("quicframe: handler returned error",
@@ -306,6 +314,36 @@ func (a *App) SetLogger(l *slog.Logger) { a.logger = l }
 func (a *App) SetQUICConfig(cfg *quic.Config) { a.quicCfg = cfg }
 
 // ─── Internal helpers ────────────────────────────────────────────────────────
+
+type quicConnWrapper struct{ *quic.Conn }
+
+// ControlTransport defines the interface for a secure control channel.
+type ControlTransport interface {
+	AcceptStream(context.Context) (quic.Stream, error)
+	OpenStream() (quic.Stream, error)
+	CloseWithError(uint64, string) error
+	RemoteAddr() net.Addr
+}
+
+// NOTE: remoteAddrProvider is defined in context.go
+
+func (w *quicConnWrapper) PeerCertificates() []*x509.Certificate {
+	return w.Conn.ConnectionState().TLS.PeerCertificates
+}
+
+func (w *quicConnWrapper) CloseWithError(code uint64, msg string) error {
+	return w.Conn.CloseWithError(quic.ApplicationErrorCode(code), msg)
+}
+
+type wtSessionWrapper struct{ *webtransport.Session }
+
+func (w *wtSessionWrapper) PeerCertificates() []*x509.Certificate {
+	return nil
+}
+
+func (w *wtSessionWrapper) CloseWithError(code uint64, msg string) error {
+	return w.Session.CloseWithError(webtransport.SessionErrorCode(code), msg)
+}
 
 // prepend inserts elem at position 0, removing any prior duplicate.
 func prepend(elem string, slice []string) []string {

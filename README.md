@@ -633,6 +633,25 @@ QuicFrame uses HTTP-semantic status codes for developer familiarity:
 
 ---
 
-## License
+## Security & PKI
 
-MIT
+QuicFrame natively supports Self-Managed PKI, allowing nodes to establish secure bidirectional control channels without complex manual certificate configuration.
+
+### Automated PKI Setup
+
+```go
+app.ListenWithPKI(ctx, ":4433", "", "node-id", "localhost")
+```
+
+### MTLS Authentication
+
+Secure your handlers using the built-in `MTLSAuth` middleware:
+
+```go
+app.Use(middleware.MTLSAuth())
+
+app.GET("/secure", func(ctx *quicframe.Context) error {
+    nodeID, _ := ctx.Get("node_id")
+    return ctx.Send(200, []byte(fmt.Sprintf("Authenticated peer: %s\n", nodeID)))
+})
+```

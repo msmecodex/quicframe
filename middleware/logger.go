@@ -30,7 +30,7 @@ func Logger(logger ...*slog.Logger) qf.MiddlewareFunc {
 			}
 
 			log.Log(
-				nil, level,
+				ctx.Context(), level,
 				"request",
 				"id", ctx.RequestID(),
 				"method", ctx.Method(),
