@@ -312,6 +312,36 @@ func Tracing() quicframe.MiddlewareFunc {
 }
 ```
 
+### Go Client API
+
+```go
+import (
+    "context"
+    qf "github.com/msmecodex/quicframe/framework"
+    "github.com/msmecodex/quicframe/tlsutil"
+)
+
+// Dial a server
+tlsCfg, _ := tlsutil.SelfSigned("localhost")
+client, _ := qf.Dial(context.Background(), "127.0.0.1:4433", tlsCfg, nil)
+defer client.Close()
+
+// Simple Request (automatic MsgPack marshaling)
+body := map[string]string{"name": "Alice"}
+resp, err := client.Request(ctx, "POST", "/users", body)
+
+// Request with Headers (for authentication/metadata)
+headers := map[string]string{"Authorization": "Bearer token"}
+resp, err = client.RequestWithHeaders(ctx, "GET", "/profile", headers, nil)
+
+// Error Handling
+if err != nil {
+    // FrameTypeError frames are decoded into descriptive errors:
+    // "quicframe: server error 403: forbidden"
+    log.Println(err)
+}
+```
+
 ### TLS
 
 ```go

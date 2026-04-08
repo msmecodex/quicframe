@@ -12,6 +12,7 @@ import (
 
 	"github.com/msmecodex/quicframe/protocol"
 	"github.com/quic-go/quic-go"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 type Client struct {
@@ -47,6 +48,11 @@ func Dial(ctx context.Context, addr string, tlsCfg *tls.Config, quicCfg *quic.Co
 
 // Request sends a single request and returns the response.
 func (c *Client) Request(ctx context.Context, method, path string, body interface{}) (*protocol.Response, error) {
+	return c.RequestWithHeaders(ctx, method, path, nil, body)
+}
+
+// RequestWithHeaders sends a request with optional headers and returns the response.
+func (c *Client) RequestWithHeaders(ctx context.Context, method, path string, headers map[string]string, body interface{}) (*protocol.Response, error) {
 	stream, err := c.conn.OpenStreamSync(ctx)
 	if err != nil {
 		return nil, err
@@ -54,13 +60,22 @@ func (c *Client) Request(ctx context.Context, method, path string, body interfac
 	defer stream.Close()
 
 	req := &protocol.Request{
-		ID:     fmt.Sprintf("req-%d", time.Now().UnixNano()),
-		Method: method,
-		Path:   path,
+		ID:      fmt.Sprintf("req-%d", time.Now().UnixNano()),
+		Method:  method,
+		Path:    path,
+		Headers: headers,
 	}
+
 	if body != nil {
-		// Encode body if provided
-		// ... (omitting for brevity, would use msgpack)
+		if b, ok := body.([]byte); ok {
+			req.Body = b
+		} else {
+			b, err := msgpack.Marshal(body)
+			if err != nil {
+				return nil, fmt.Errorf("quicframe: marshal body: %w", err)
+			}
+			req.Body = b
+		}
 	}
 
 	if err := protocol.WriteFrame(stream, protocol.FrameTypeRequest, req); err != nil {
@@ -70,6 +85,11 @@ func (c *Client) Request(ctx context.Context, method, path string, body interfac
 	ft, data, err := protocol.ReadFrame(stream)
 	if err != nil {
 		return nil, err
+	}
+
+	if ft == protocol.FrameTypeError {
+		errFrame, _ := protocol.DecodeError(data)
+		return nil, fmt.Errorf("quicframe: server error %d: %s", errFrame.Code, errFrame.Message)
 	}
 
 	if ft != protocol.FrameTypeResponse {

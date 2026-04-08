@@ -86,6 +86,8 @@ message string
 ```
 
 Application and protocol errors both use the same shape. For request-scoped failures, `id` echoes the request ID.
+ 
+ **Note:** The Go client automatically decodes `0x05` error frames and returns a formatted error: `quicframe: server error <code>: <message>`.
 
 ## Ping and Pong
 
