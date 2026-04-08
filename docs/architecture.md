@@ -51,9 +51,22 @@ The middleware package contains reusable production helpers:
 
 The TLS package keeps certificate setup out of app code:
 
-- self-signed certificates for local work
-- PEM file loading
 - Let's Encrypt autocert support
+
+## `pki`
+
+The PKI module provides automated identity management for distributed nodes:
+
+- automated CSR generation and signing
+- disk-based identity persistence
+- background certificate rotation (14-day validity window)
+
+## `transport`
+
+The transport package provides encapsulated secure control channels:
+
+- `DialControl` and `ListenControl` abstractions
+- automated mTLS and ALPN management
 
 ## Transport Model
 

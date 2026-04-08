@@ -112,6 +112,23 @@ claims := middleware.GetClaims(c)
 
 If the header is missing, malformed, expired, or invalid, the middleware returns a `401` error frame.
 
+## mTLS Auth
+
+`middleware.MTLSAuth()` verifies the peer certificate chain and extracts the identity.
+
+```go
+app.Use(middleware.MTLSAuth())
+```
+
+Behavior:
+
+- Requires the connection to have valid peer certificates.
+- Extracts the Common Name from the leaf certificate.
+- Stores the identity in context locals under the key `"node_id"`.
+- Returns `401` if no certificates are present or if the identity cannot be extracted.
+
+This middleware is intended for use with [Automated PKI](tls.md#automated-pki-self-managed).
+
 ## Rate Limiting
 
 Simple IP-based limiting:

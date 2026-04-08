@@ -90,6 +90,22 @@ addr := c.RemoteAddr()
 
 Useful for audit logging, allowlists, and rate-limiting strategies.
 
+### Peer Certificates
+
+```go
+certs := c.PeerCertificates()
+```
+
+Returns the certificate chain provided by the peer during the TLS handshake. This is primarily used for [mTLS authentication](middleware.md#mtls-auth).
+
+### Standard Context
+
+```go
+ctx := c.Context()
+```
+
+Returns the underlying request-scoped `context.Context`. Use this when calling external libraries or standard library functions (like logging) that require a `context.Context`.
+
 ## Sending Responses
 
 ### Raw Bytes

@@ -2,7 +2,7 @@
 
 QUIC requires TLS 1.3, so every QuicFrame server needs a valid `*tls.Config`.
 
-The `tlsutil` package provides three setup paths.
+The `tlsutil` package provides three setup paths, while the framework's `pki` module provides a fully automated path for distributed nodes.
 
 Examples in this guide assume:
 
@@ -83,6 +83,17 @@ Options:
 - `Email` is optional but recommended
 - `Staging` switches to the Let's Encrypt staging environment
 
+## Automated PKI (Self-Managed)
+
+For distributed systems and control channels, QuicFrame can automatically manage certificates using the `pki` module. This handles CSR generation, signing, persistence, and rolling 14-day validity updates for WebTransport.
+
+```go
+// Start server with automated PKI and mTLS
+err := app.ListenWithPKI(ctx, ":4433", ":4434", "satellite-01", "localhost")
+```
+
+See the [mTLS Guide](middleware.md#mtlsauth) for securing connections using these certificates.
+
 ## Production Notes
 
 - The server must present names that match the client SNI.
@@ -95,6 +106,7 @@ Options:
 | Environment | TLS helper |
 | --- | --- |
 | Local development | `SelfSigned` |
+| Distributed nodes / Control channels | **Automated PKI** |
 | Existing cert management | `FromFiles` |
 | Public internet service | `Autocert` |
 
