@@ -28,7 +28,12 @@ Browser           ── WebTransport ───┘      MsgPack · Router · Mid
 
 - **Express-style API** — `app.GET`, `app.POST`, `app.Group`, `app.Use`
 - **Binary protocol** — MsgPack over QUIC streams, never JSON
-- **Two transports** — raw QUIC (`qf/1`) for native clients, WebTransport (HTTP/3) for browsers
+- **Two transports**
+  - Native QUIC with ALPN "qf/1" for Go, Rust, and other native clients
+  - WebTransport over HTTP/3 for browser clients
+
+  In addition to standard listeners, the framework allows processing
+  existing connections directly using `App.HandleNativeConn`.
 - **Routing** — static, dynamic (`:id`), wildcard (`*path`), route groups
 - **Middleware** — chainable, Express-style: Logger, Recovery, JWT, Rate Limiter
 - **Streaming** — server-push via `StreamWriter`, with backpressure
@@ -250,6 +255,10 @@ api.GET("/profile", profileHandler)
 // Start both transports
 tlsCfg, _ := tlsutil.SelfSigned("localhost")
 app.ListenAddr(ctx, ":4433", ":4434", tlsCfg)
+
+// Alternatively, process an existing QUIC connection directly
+// (Useful for custom listeners or connection Handover scenarios)
+app.HandleNativeConn(rawQuicConn)
 ```
 
 ### Context
@@ -329,6 +338,9 @@ defer client.Close()
 // Simple Request (automatic MsgPack marshaling)
 body := map[string]string{"name": "Alice"}
 resp, err := client.Request(ctx, "POST", "/users", body)
+
+// Access the underlying QUIC connection
+rawConn := client.Conn()
 
 // Request with Headers (for authentication/metadata)
 headers := map[string]string{"Authorization": "Bearer token"}
@@ -585,7 +597,9 @@ Browser ────────────┤  :4434  HTTP/3 + WebTransport   
                     └─────────────────────────────────┘
 ```
 
-Both transports converge on the same `dispatchStream` function — the routing, middleware, and handlers are identical regardless of whether the connection came from a native client or a browser.
+Both paths eventually call the same internal stream dispatcher, so handlers and middleware do not need to care which transport a request came from.
+
+The framework also supports processing already-established connections via `App.HandleNativeConn(conn)`, which is useful for integration with external listeners or reverse-tunneling proxies.
 
 ---
 

@@ -53,6 +53,11 @@ func NewClientFromConn(conn *quic.Conn) *Client {
 	}
 }
 
+// Conn returns the underlying QUIC connection.
+func (c *Client) Conn() *quic.Conn {
+	return c.conn
+}
+
 // Request sends a single request and returns the response.
 func (c *Client) Request(ctx context.Context, method, path string, body interface{}) (*protocol.Response, error) {
 	return c.RequestWithHeaders(ctx, method, path, nil, body)

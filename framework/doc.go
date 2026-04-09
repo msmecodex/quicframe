@@ -12,6 +12,9 @@
 //   - Native QUIC with ALPN "qf/1" for Go, Rust, and other native clients
 //   - WebTransport over HTTP/3 for browser clients
 //
+// In addition to standard listeners, the framework allows processing
+// existing connections directly using [App.HandleNativeConn].
+//
 // # Quick Start
 //
 //	package main

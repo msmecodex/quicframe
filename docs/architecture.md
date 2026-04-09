@@ -76,6 +76,8 @@ QuicFrame supports two entry points:
 - WebTransport over HTTP/3
 
 Both paths eventually call the same internal stream dispatcher, so handlers and middleware do not need to care which transport a request came from.
+//
+The framework also supports processing already-established connections via `App.HandleNativeConn(conn)`, which is useful for integration with external listeners or reverse-tunneling proxies.
 
 ## Request Lifecycle
 

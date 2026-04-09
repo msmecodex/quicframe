@@ -66,6 +66,15 @@ app.ListenAddr(ctx, ":4433", ":4434", tlsCfg)
 
 Pass an empty string as the WebTransport address to skip it when using `ListenAddr`.
 
+### Direct Connection Handling
+
+If you are using a custom listener or receiving connections from a proxy/relay, you can pass existing QUIC connections directly to the framework:
+
+```go
+// Takes ownership of the connection and handles all incoming streams
+app.HandleNativeConn(conn)
+```
+
 ## Middleware Configuration
 
 ### JWT

@@ -143,11 +143,7 @@ func (a *App) ListenNative(ctx context.Context, addr string, tlsCfg *tls.Config)
 			}
 			return fmt.Errorf("quicframe: accept: %w", err)
 		}
-		a.wg.Add(1)
-		go func(c *quic.Conn) {
-			defer a.wg.Done()
-			a.handleNativeConn(&quicConnWrapper{c})
-		}(conn)
+		go a.HandleNativeConn(conn)
 	}
 }
 
@@ -218,10 +214,14 @@ func (a *App) ListenWithPKI(ctx context.Context, nativeAddr, wtAddr, nodeID stri
 // Shutdown waits for all in-flight stream handlers to finish.
 func (a *App) Shutdown() { a.wg.Wait() }
 
-func (a *App) handleNativeConn(conn *quicConnWrapper) {
-	defer conn.CloseWithError(0, "done")
+// HandleNativeConn allows external QUIC connections to be processed by the app router.
+// It takes ownership of the connection and handles all incoming streams until the connection is closed.
+func (a *App) HandleNativeConn(c *quic.Conn) {
+	a.wg.Add(1)
+	defer a.wg.Done()
 
-	c := conn.Conn
+	conn := &quicConnWrapper{c}
+	defer conn.CloseWithError(0, "done")
 
 	connCtx := c.Context()
 	for {

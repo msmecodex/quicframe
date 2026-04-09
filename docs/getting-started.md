@@ -141,7 +141,8 @@ Your app owns business logic and data access. QuicFrame handles transport, routi
 3. Use `tlsutil.SelfSigned` for local development.
 4. Switch to `tlsutil.Autocert` or `tlsutil.FromFiles` for deployment.
 5. Add `BindAndValidate` and `middleware.RequireHeaders(...)` for request validation.
-6. Add a Rust or JS client if you need native or browser consumers.
+6. Use `app.HandleNativeConn(conn)` if you need to process connections from an external proxy or relay.
+7. Add a Rust or JS client if you need native or browser consumers.
 
 ## Examples in This Repository
 
