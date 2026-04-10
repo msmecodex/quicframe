@@ -269,6 +269,7 @@ func handler(c *qf.Context) error {
     c.Method()      // "GET"
     c.Path()        // "/users/42"
     c.Param("id")   // "42"
+    c.Query("limit") // "10" (from ?limit=10)
     c.Header("authorization")
     c.RequestID()
     c.RemoteAddr()

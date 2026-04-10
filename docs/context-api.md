@@ -23,6 +23,21 @@ c.Path()
 id := c.Param("id")
 ```
 
+### Query Parameters
+
+Use `Query` to access URL query strings (e.g. `?starred=true`):
+
+```go
+isStarred := c.Query("starred") // "true"
+```
+
+To access all parameters as `url.Values`:
+
+```go
+params := c.QueryParams()
+limit := params.Get("limit")
+```
+
 ### Headers
 
 ```go

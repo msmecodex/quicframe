@@ -65,6 +65,21 @@ app.GET("/files/*path", func(c *qf.Context) error {
 
 Wildcards are tail captures. They consume the remainder of the path.
 
+## Query Strings
+
+QuicFrame automatically parses URL query strings. Query strings are **ignored** when matching a route to a path, so a request to `/list?starred=true` will correctly match the `/list` route.
+
+Access these parameters in your handler using `c.Query("key")`:
+
+```go
+app.GET("/list", func(c *qf.Context) error {
+    starred := c.Query("starred")
+    return c.MsgPack(200, map[string]string{
+        "starred": starred,
+    })
+})
+```
+
 ## Route Groups
 
 Groups let you share a prefix and optional middleware:

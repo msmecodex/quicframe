@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"sync"
 	"sync/atomic"
 
@@ -29,6 +30,9 @@ type Context struct {
 
 	// params holds route path parameters (e.g. /users/:id → "id" → "42").
 	params map[string]string
+
+	// queryParams holds parsed URL query parameters (e.g. ?starred=true).
+	queryParams url.Values
 
 	// locals is a per-request key-value store for middleware communication.
 	locals sync.Map
@@ -59,6 +63,12 @@ func newContext(ctx context.Context, req *protocol.Request, conn remoteAddrProvi
 
 // Param returns the value of the named route parameter (e.g. "id" for /users/:id).
 func (c *Context) Param(key string) string { return c.params[key] }
+
+// Query returns the value of the named URL query parameter (e.g. "starred" for ?starred=true).
+func (c *Context) Query(key string) string { return c.queryParams.Get(key) }
+
+// QueryParams returns all parsed URL query parameters.
+func (c *Context) QueryParams() url.Values { return c.queryParams }
 
 // Header returns the value of the named request header (case-sensitive).
 func (c *Context) Header(key string) string {
@@ -206,6 +216,9 @@ func (c *Context) writeResponse(status int, headers map[string]string, body []by
 
 // setParams is called by the router after a successful match.
 func (c *Context) setParams(params map[string]string) { c.params = params }
+
+// setQueryParams is called by the dispatcher to set parsed query values.
+func (c *Context) setQueryParams(params url.Values) { c.queryParams = params }
 
 // ─── StreamWriter ────────────────────────────────────────────────────────────
 

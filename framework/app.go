@@ -30,6 +30,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -287,8 +288,17 @@ func (a *App) dispatchStream(ctx context.Context, peer remoteAddrProvider, strea
 	}
 
 	qfCtx := newContext(ctx, req, peer, stream)
-	handler, params := a.router.match(req.Method, req.Path)
+
+	// Parse path and query parameters
+	u, err := url.Parse(req.Path)
+	if err != nil {
+		// If parsing fails (unlikely for relative paths), fallback to raw path
+		u = &url.URL{Path: req.Path}
+	}
+
+	handler, params := a.router.match(req.Method, u.Path)
 	qfCtx.setParams(params)
+	qfCtx.setQueryParams(u.Query())
 
 	// App-level middleware wraps the (already-middleware-wrapped) route handler.
 	h := applyMiddleware(handler, a.middleware)
