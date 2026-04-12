@@ -40,6 +40,17 @@ Additional group middleware:
 api.Use(middleware.RateLimitSimple(200))
 ```
 
+### After Middleware
+
+You can also register "After" middleware that runs after the main handler returns:
+
+```go
+app.After(func(c *qf.Context) error {
+    log.Println("handler returned")
+    return nil
+})
+```
+
 ## Execution Order
 
 The first middleware you pass is the outermost wrapper.
@@ -144,7 +155,7 @@ app.Use(middleware.RateLimit(middleware.RateLimitConfig{
     RequestsPerSecond: 50,
     Burst:             100,
     KeyFunc: func(c *qf.Context) string {
-        return c.Header("x-api-key")
+        return c.GetHeader("x-api-key")
     },
 }))
 ```
@@ -162,7 +173,7 @@ The built-in limiter:
 func RequireTenant() qf.MiddlewareFunc {
     return func(next qf.HandlerFunc) qf.HandlerFunc {
         return func(c *qf.Context) error {
-            tenant := c.Header("x-tenant-id")
+            tenant := c.GetHeader("x-tenant-id")
             if tenant == "" {
                 return c.Error(400, "missing x-tenant-id")
             }

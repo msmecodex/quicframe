@@ -55,7 +55,7 @@ func JWT(cfg JWTConfig) qf.MiddlewareFunc {
 
 	return func(next qf.HandlerFunc) qf.HandlerFunc {
 		return func(ctx *qf.Context) error {
-			raw := ctx.Header(cfg.TokenHeader)
+			raw := ctx.GetHeader(cfg.TokenHeader)
 			if raw == "" {
 				return ctx.Error(protocol.StatusUnauthorized, "missing authorization header")
 			}

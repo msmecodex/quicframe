@@ -40,8 +40,16 @@ limit := params.Get("limit")
 
 ### Headers
 
+#### GetHeader (Request)
+
 ```go
-auth := c.Header("authorization")
+auth := c.GetHeader("authorization")
+```
+
+#### Header (Response)
+
+```go
+c.Header("X-Tenant-ID", "123")
 ```
 
 Headers are stored as `map[string]string` and looked up exactly as sent. There is no canonicalization layer in the current implementation, so keep key casing consistent across clients and middleware.
@@ -112,6 +120,27 @@ certs := c.PeerCertificates()
 ```
 
 Returns the certificate chain provided by the peer during the TLS handshake. This is primarily used for [mTLS authentication](middleware.md#mtls-auth).
+ 
+ ## Cookies
+ 
+ ### Get Cookie
+ 
+ ```go
+ cookie, err := c.Cookie("session")
+ ```
+ 
+ Returns an `*http.Cookie` from the request.
+ 
+ ### Set Cookie
+ 
+ ```go
+ c.SetCookie(&http.Cookie{
+     Name:  "theme",
+     Value: "dark",
+ })
+ ```
+ 
+ Adds a `Set-Cookie` header to the response.
 
 ### Standard Context
 
@@ -149,6 +178,12 @@ This sends status `204`.
 
 ```go
 return c.Error(404, "not found")
+```
+
+Structured error with context:
+
+```go
+return c.Error(400, "invalid input", map[string]string{"foo": "bar"})
 ```
 
 This writes an error frame instead of a normal response frame.

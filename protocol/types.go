@@ -81,6 +81,7 @@ type ErrorFrame struct {
 	ID      string `msgpack:"id"`      // echoes Request.ID; empty for connection-level errors
 	Code    int    `msgpack:"code"`    // status code
 	Message string `msgpack:"message"` // human-readable error
+	Data    []byte `msgpack:"data,omitempty"` // msgpack-encoded extra context
 }
 
 // PingFrame is carried by FrameTypePing / FrameTypePong.

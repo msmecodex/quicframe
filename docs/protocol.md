@@ -83,6 +83,7 @@ Behavior:
 id      string
 code    int
 message string
+data    bytes
 ```
 
 Application and protocol errors both use the same shape. For request-scoped failures, `id` echoes the request ID.

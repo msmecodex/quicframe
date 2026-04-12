@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"net/url"
 	"sync"
 	"sync/atomic"
@@ -40,6 +41,9 @@ type Context struct {
 	// sent guards against double-sends.
 	sent atomic.Bool
 
+	// resHeaders stores pending response headers to be merged on send.
+	resHeaders map[string]string
+
 	// ctx is the underlying request context.
 	ctx context.Context
 }
@@ -70,12 +74,37 @@ func (c *Context) Query(key string) string { return c.queryParams.Get(key) }
 // QueryParams returns all parsed URL query parameters.
 func (c *Context) QueryParams() url.Values { return c.queryParams }
 
-// Header returns the value of the named request header (case-sensitive).
-func (c *Context) Header(key string) string {
+// GetHeader returns the value of the named request header (case-sensitive).
+func (c *Context) GetHeader(key string) string {
 	if c.Request.Headers == nil {
 		return ""
 	}
 	return c.Request.Headers[key]
+}
+
+// Header sets a response header that will be sent with the response.
+func (c *Context) Header(key, value string) {
+	if c.resHeaders == nil {
+		c.resHeaders = make(map[string]string)
+	}
+	c.resHeaders[key] = value
+}
+
+// Cookie returns the named cookie provided in the request or http.ErrNoCookie if not found.
+func (c *Context) Cookie(name string) (*http.Cookie, error) {
+	header := c.GetHeader("Cookie")
+	if header == "" {
+		return nil, http.ErrNoCookie
+	}
+	req := &http.Request{Header: http.Header{"Cookie": {header}}}
+	return req.Cookie(name)
+}
+
+// SetCookie adds a Set-Cookie header to the response.
+func (c *Context) SetCookie(cookie *http.Cookie) {
+	if v := cookie.String(); v != "" {
+		c.Header("Set-Cookie", v)
+	}
 }
 
 // Method returns the request method string (GET, POST, …).
@@ -175,11 +204,20 @@ func (c *Context) NoContent() error {
 }
 
 // Error sends an error frame for the current request.
-func (c *Context) Error(code int, message string) error {
+// If data is provided, the first element is marshaled and sent in the error frame.
+func (c *Context) Error(code int, message string, data ...interface{}) error {
 	if !c.sent.CompareAndSwap(false, true) {
 		return nil // already sent
 	}
-	return protocol.WriteError(c.stream, c.Request.ID, code, message)
+	var payload []byte
+	if len(data) > 0 && data[0] != nil {
+		var err error
+		payload, err = msgpack.Marshal(data[0])
+		if err != nil {
+			return fmt.Errorf("quicframe: Error: marshal data: %w", err)
+		}
+	}
+	return protocol.WriteError(c.stream, c.Request.ID, code, message, payload)
 }
 
 // NewStream opens a streaming response.  The caller MUST call StreamWriter.Close()
@@ -204,10 +242,20 @@ func (c *Context) writeResponse(status int, headers map[string]string, body []by
 	if !c.sent.CompareAndSwap(false, true) {
 		return fmt.Errorf("quicframe: response already sent")
 	}
+
+	// Merge pending headers set via c.Header()
+	finalHeaders := make(map[string]string)
+	for k, v := range c.resHeaders {
+		finalHeaders[k] = v
+	}
+	for k, v := range headers {
+		finalHeaders[k] = v
+	}
+
 	resp := &protocol.Response{
 		ID:      c.Request.ID,
 		Status:  status,
-		Headers: headers,
+		Headers: finalHeaders,
 		Body:    body,
 		Stream:  stream,
 	}

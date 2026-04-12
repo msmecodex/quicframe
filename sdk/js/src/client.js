@@ -88,7 +88,7 @@ class QfStream {
             return { value: undefined, done: true };
           case FRAME_ERROR:
             this._done = true;
-            throw new QuicFrameError(frame.payload.code, frame.payload.message);
+            throw new QuicFrameError(frame.payload.code, frame.payload.message, frame.payload.data);
           default:
             // skip unknown frames
         }
@@ -107,10 +107,11 @@ class QfStream {
 // ── Error type ───────────────────────────────────────────────────────────────
 
 export class QuicFrameError extends Error {
-  constructor(code, message) {
+  constructor(code, message, data = null) {
     super(message);
     this.name = 'QuicFrameError';
     this.code = code;
+    this.data = data;
   }
 }
 
@@ -265,7 +266,7 @@ export class QuicFrameClient {
       const f = buf.tryRead();
       if (f) {
         if (f.frameType === FRAME_ERROR) {
-          throw new QuicFrameError(f.payload.code, f.payload.message);
+          throw new QuicFrameError(f.payload.code, f.payload.message, f.payload.data);
         }
         if (f.frameType === FRAME_RESPONSE) break; // header received
       }
@@ -351,7 +352,7 @@ export class QuicFrameClient {
             path,
             error: f.payload,
           });
-          throw new QuicFrameError(f.payload.code, f.payload.message);
+          throw new QuicFrameError(f.payload.code, f.payload.message, f.payload.data);
         default:
           // Ignore unexpected frames; keep reading.
       }

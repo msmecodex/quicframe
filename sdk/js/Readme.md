@@ -155,6 +155,26 @@ Ping also requires WebTransport.
 - `rawBody`
 - `ok`
 
+## Error Handling
+
+When the server returns an error frame, the client throws a `QuicFrameError`.
+
+```js
+import { decode } from "@msgpack/msgpack";
+
+try {
+  await client.get("/private");
+} catch (err) {
+  console.error(`Error ${err.code}: ${err.message}`);
+  
+  if (err.data) {
+    // Structured error data is returned as Uint8Array (MsgPack-encoded)
+    const details = decode(err.data);
+    console.log("Error details:", details);
+  }
+}
+```
+
 ## Browser Requirements
 
 - HTTPS is required for WebTransport in normal browser use.

@@ -116,7 +116,7 @@ func main() {
 
 	tenantAPI.GET("/users", func(c *qf.Context) error {
 		return c.MsgPack(200, map[string]interface{}{
-			"tenant": c.Header("x-tenant-id"),
+			"tenant": c.GetHeader("x-tenant-id"),
 			"users":  copyUsers(),
 		})
 	})

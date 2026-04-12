@@ -42,10 +42,11 @@ import (
 
 // App is the top-level framework object.  Create one with New().
 type App struct {
-	router     *Router
-	middleware []MiddlewareFunc
-	logger     *slog.Logger
-	quicCfg    *quic.Config
+	router          *Router
+	middleware      []MiddlewareFunc
+	afterMiddleware []HandlerFunc
+	logger          *slog.Logger
+	quicCfg         *quic.Config
 	wg         sync.WaitGroup
 	pkiManager interface{} // Use interface to avoid circular dependency or keep it internal
 }
@@ -70,6 +71,13 @@ func New() *App {
 // Use appends application-level middleware that runs before every handler.
 func (a *App) Use(mw ...MiddlewareFunc) *App {
 	a.middleware = append(a.middleware, mw...)
+	return a
+}
+
+// After appends "after" middleware that runs after the main handler returns.
+// This is useful for telemetry or final response processing.
+func (a *App) After(mw ...HandlerFunc) *App {
+	a.afterMiddleware = append(a.afterMiddleware, mw...)
 	return a
 }
 
@@ -283,7 +291,7 @@ func (a *App) dispatchStream(ctx context.Context, peer remoteAddrProvider, strea
 	req, err := protocol.DecodeRequest(data)
 	if err != nil {
 		a.logger.Error("quicframe: decode request", "err", err)
-		_ = protocol.WriteError(stream, "", protocol.StatusBadRequest, "malformed request frame")
+		_ = protocol.WriteError(stream, "", protocol.StatusBadRequest, "malformed request frame", nil)
 		return
 	}
 
@@ -305,10 +313,15 @@ func (a *App) dispatchStream(ctx context.Context, peer remoteAddrProvider, strea
 
 	if err := h(qfCtx); err != nil {
 		if !qfCtx.sent.Load() {
-			_ = protocol.WriteError(stream, req.ID, protocol.StatusInternalServerError, err.Error())
+			_ = protocol.WriteError(stream, req.ID, protocol.StatusInternalServerError, err.Error(), nil)
 		}
 		a.logger.Error("quicframe: handler returned error",
 			"method", req.Method, "path", req.Path, "err", err)
+	}
+
+	// Run after-middleware
+	for _, after := range a.afterMiddleware {
+		_ = after(qfCtx)
 	}
 }
 

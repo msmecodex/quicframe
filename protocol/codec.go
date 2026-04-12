@@ -97,10 +97,11 @@ func DecodeError(data []byte) (*ErrorFrame, error) {
 }
 
 // WriteError is a convenience wrapper for sending an error frame.
-func WriteError(w io.Writer, requestID string, code int, message string) error {
+func WriteError(w io.Writer, requestID string, code int, message string, data []byte) error {
 	return WriteFrame(w, FrameTypeError, &ErrorFrame{
 		ID:      requestID,
 		Code:    code,
 		Message: message,
+		Data:    data,
 	})
 }

@@ -138,6 +138,14 @@ For streaming responses the server emits a chain of `StreamData` frames ending w
 StreamChunk { id, seq uint64, data bytes, final bool }
 ```
 
+**Error** (server → client):
+```
+id       string             # echoes request ID
+code     int                # status code (400, 500…)
+message  string             # human-readable message
+data     bytes              # (optional) msgpack-encoded structured context
+```
+
 ---
 
 ## Getting Started
@@ -241,6 +249,13 @@ app.Use(
     middleware.RateLimitSimple(500), // 500 req/s per IP
 )
 
+// After-middleware (runs after the handler returns)
+app.After(func(c *qf.Context) error {
+    duration := time.Since(c.MustGet("start_time").(time.Time))
+    fmt.Printf("Request took %v\n", duration)
+    return nil
+})
+
 // Register routes
 app.GET("/ping", pingHandler)
 app.POST("/users", createUser)
@@ -268,9 +283,9 @@ func handler(c *qf.Context) error {
     // Request
     c.Method()      // "GET"
     c.Path()        // "/users/42"
-    c.Param("id")   // "42"
-    c.Query("limit") // "10" (from ?limit=10)
-    c.Header("authorization")
+    c.Param("id")      // "42"
+    c.Query("limit")   // "10" (from ?limit=10)
+    c.GetHeader("authorization")
     c.RequestID()
     c.RemoteAddr()
 
@@ -284,10 +299,18 @@ func handler(c *qf.Context) error {
     v, _ := c.Get("user_id")
 
     // Responses
+    c.Header("X-Tenant", "123")                      // set response header
     c.MsgPack(200, map[string]string{"ok": "true"})  // encode + send
     c.Send(200, rawBytes)
     c.NoContent()
+
+    // Cookies
+    c.SetCookie(&http.Cookie{Name: "token", Value: "..."})
+    cookie, _ := c.Cookie("session_id")
+
+    // Granular Errors
     c.Error(404, "not found")
+    c.Error(400, "invalid input", MyErrorDetails{Field: "email"})
 
     // Streaming response
     sw, _ := c.NewStream(200, nil)
